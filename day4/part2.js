@@ -1,4 +1,3 @@
-const { BADFAMILY } = require("dns");
 const { readFileSync } = require("fs");
 
 const INPUT = readFileSync("./input.txt", "utf8");
