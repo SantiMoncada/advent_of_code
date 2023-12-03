@@ -1,6 +1,6 @@
 const { readFileSync } = require("fs");
 
-const INPUT = readFileSync("./testinput1.txt", "utf8");
+const INPUT = readFileSync("./input.txt", "utf8");
 
 function parseInput(input) {
   const lines = input.split("\n");
@@ -20,32 +20,32 @@ const symbolCoords = [];
 
 for (let i = 0; i < iLen; i++) {
   for (let j = 0; j < jLen; j++) {
-    if ("*$#".includes(matrix[i][j])) {
+    if (matrix[i][j] !== "." && !isNumber(matrix[i][j])) {
       if (isNumber(matrix[i - 1][j - 1])) {
-        map[i - 1][j - 1] = matrix[i - 1][j - 1];
+        searchNumber(i - 1, j - 1, matrix, map);
       }
       if (isNumber(matrix[i + 0][j - 1])) {
-        map[i + 0][j - 1] = matrix[i + 0][j - 1];
+        searchNumber(i + 0, j - 1, matrix, map);
       }
-      if (isNumber(matrix[i + 1][j - 1])) {
-        map[i + 1][j - 1] = matrix[i + 1][j - 1];
-      }
-
-      if (isNumber(matrix[i - 1][j + 0])) {
-        map[i - 1][j + 0] = matrix[i - 1][j + 0];
-      }
-      if (isNumber(matrix[i + 1][j + 0])) {
-        map[i + 1][j + 0] = matrix[i + 1][j + 0];
+      if (isNumber(matrix[i + 1]?.[j - 1])) {
+        searchNumber(i + 1, j - 1, matrix, map);
       }
 
-      if (isNumber(matrix[i - 1][j + 1])) {
-        map[i - 1][j + 1] = matrix[i - 1][j + 1];
+      if (isNumber(matrix[i - 1]?.[j + 0])) {
+        searchNumber(i - 1, j + 0, matrix, map);
       }
-      if (isNumber(matrix[i - 0][j + 1])) {
-        map[i - 0][j + 1] = matrix[i - 0][j + 1];
+      if (isNumber(matrix[i + 1]?.[j + 0])) {
+        searchNumber(i + 1, j + 0, matrix, map);
       }
-      if (isNumber(matrix[i + 1][j + 1])) {
-        map[i + 1][j + 1] = matrix[i + 1][j + 1];
+
+      if (isNumber(matrix[i - 1]?.[j + 1])) {
+        searchNumber(i - 1, j + 1, matrix, map);
+      }
+      if (isNumber(matrix[i - 0]?.[j + 1])) {
+        searchNumber(i - 0, j + 1, matrix, map);
+      }
+      if (isNumber(matrix[i + 1]?.[j + 1])) {
+        searchNumber(i + 1, j + 1, matrix, map);
       }
     }
   }
@@ -59,19 +59,8 @@ function isNumber(char) {
   return char >= "0" && char <= "9";
 }
 
-let acc = 0;
-for (const line of map) {
-  for (const cell of line) {
-    if (isNumber(cell)) {
-      acc += parseInt(cell);
-    }
-  }
-}
-console.log(map);
-console.log({ acc });
-
 function searchNumber(i, j, matrix, destiny) {
-  if (matrix[i][j] === undefined || destiny[i][j] === ".") {
+  if (matrix[i][j] === undefined || destiny[i][j] !== ".") {
     return;
   }
 
@@ -86,3 +75,36 @@ function searchNumber(i, j, matrix, destiny) {
     }
   }
 }
+
+let acc = 0;
+let lineN = 1;
+for (const line of map) {
+  let currentNumber = "";
+  for (const char of line) {
+    if (char !== ".") {
+      currentNumber += char;
+    } else {
+      const num = parseInt(currentNumber);
+      if (!isNaN(num)) {
+        console.log({ acc, num });
+        acc += num;
+      }
+      currentNumber = "";
+    }
+  }
+  console.log("-------------------------------------", lineN);
+  lineN++;
+}
+
+console.log({ acc });
+
+var fs = require("fs");
+
+var file = fs.createWriteStream("array.txt");
+
+map.forEach(function (v) {
+  file.write(v.join("") + "\n");
+});
+file.end();
+
+console.log(map[109].join(""));
