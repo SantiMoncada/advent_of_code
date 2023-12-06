@@ -80,7 +80,9 @@ let acc = 0;
 let lineN = 1;
 for (const line of map) {
   let currentNumber = "";
-  for (const char of line) {
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
     if (char !== ".") {
       currentNumber += char;
     } else {
@@ -90,6 +92,17 @@ for (const line of map) {
         acc += num;
       }
       currentNumber = "";
+    }
+
+    if (i === line.length - 1) {
+      if (currentNumber !== "") {
+        const num = parseInt(currentNumber);
+        if (!isNaN(num)) {
+          console.log({ acc, num });
+          acc += num;
+        }
+        currentNumber = "";
+      }
     }
   }
   console.log("-------------------------------------", lineN);
