@@ -50,60 +50,18 @@ function checkWins(card) {
   return wins;
 }
 
-const memo = {};
-/**
- *
- * @param {Card[]} data
- * @param {number} index
- */
-function checkWinMemo(data, index) {
-  if (memo[index] !== undefined) {
-    return memo[index];
-  }
-
-  const wins = checkWins(data[index]);
-
-  memo[index] = wins;
-
-  return wins;
-}
-
-/**
- * @type {number[]}
- */
-const cardStack = [];
-
-//add all the cards
+const scratChcards = new Array(data.length).fill(1);
+console.log({ scratChcards });
 for (let i = 0; i < data.length; i++) {
-  cardStack.push(i);
+  const card = data[i];
+
+  const wins = checkWins(card);
+
+  for (let j = 0; j < wins; j++) {
+    scratChcards[i + j + 1] += scratChcards[i];
+  }
+
+  console.log({ scratChcards });
 }
 
-let acc = 0;
-while (cardStack.length !== 0) {
-  acc++;
-
-  const current = cardStack.pop();
-
-  if (current !== undefined) {
-    console.log(
-      cardStack.map((elem) => ++elem),
-      " ",
-      current + 1
-    );
-  }
-
-  if (current === undefined) {
-    break;
-  }
-
-  const wins = checkWinMemo(data, current);
-
-  for (let i = 1; i <= wins; i++) {
-    cardStack.unshift(i + current);
-  }
-
-  console.log(cardStack.map((elem) => ++elem));
-  console.log();
-}
-
-console.log({ acc });
+console.log(scratChcards.reduce((a, b) => a + b));
