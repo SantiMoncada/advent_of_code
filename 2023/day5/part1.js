@@ -1,7 +1,7 @@
 //@ts-check
 const { readFileSync } = require("fs");
 
-const INPUT = readFileSync("./testinput1.txt", "utf8");
+const INPUT = readFileSync("./input.txt", "utf8");
 
 /**
  * @typedef {{
@@ -15,6 +15,7 @@ const INPUT = readFileSync("./testinput1.txt", "utf8");
  *  seedToSoil : Range[],
  *  soilToFertilizer : Range[],
  *  fertilizerToWater : Range[],
+ *  lightToTemperature : Range[],
  *  waterToLight : Range[],
  *  temperatureToHumidity : Range[],
  *  humidityToLocation : Range[]
@@ -35,6 +36,7 @@ function parseInput(input) {
     seedToSoil: [],
     soilToFertilizer: [],
     fertilizerToWater: [],
+    lightToTemperature: [],
     waterToLight: [],
     temperatureToHumidity: [],
     humidityToLocation: [],
@@ -62,6 +64,9 @@ function parseInput(input) {
         continue outer;
       case "water-to-light map":
         currentKey = "waterToLight";
+        continue outer;
+      case "light-to-temperature map":
+        currentKey = "lightToTemperature";
         continue outer;
       case "temperature-to-humidity map":
         currentKey = "temperatureToHumidity";
@@ -113,15 +118,44 @@ const output = parseInput(INPUT);
 const seedMap = new Map();
 
 for (const seed of output.seeds) {
-  seedMap[seed] = seed;
+  seedMap.set(seed, seed);
 }
 
-console.log(
-  mapToRange(13, [
-    {
-      sourceRangeStart: 10,
-      rangeLength: 5,
-      destinationRangeStart: 20,
-    },
-  ])
-);
+for (const [key, value] of seedMap) {
+  seedMap.set(key, mapToRange(value, output.seedToSoil));
+}
+
+for (const [key, value] of seedMap) {
+  seedMap.set(key, mapToRange(value, output.soilToFertilizer));
+}
+
+for (const [key, value] of seedMap) {
+  seedMap.set(key, mapToRange(value, output.fertilizerToWater));
+}
+
+for (const [key, value] of seedMap) {
+  seedMap.set(key, mapToRange(value, output.waterToLight));
+}
+
+for (const [key, value] of seedMap) {
+  seedMap.set(key, mapToRange(value, output.lightToTemperature));
+}
+
+for (const [key, value] of seedMap) {
+  seedMap.set(key, mapToRange(value, output.temperatureToHumidity));
+}
+
+for (const [key, value] of seedMap) {
+  seedMap.set(key, mapToRange(value, output.humidityToLocation));
+}
+console.log(seedMap);
+
+let min = Infinity;
+
+for (const [_, value] of seedMap) {
+  if (value < min) {
+    min = value;
+  }
+}
+
+console.log({ min });
