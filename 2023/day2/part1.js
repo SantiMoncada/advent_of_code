@@ -1,33 +1,38 @@
-console.log("------------------------------------");
 const { readFileSync } = require("fs");
 
 const INPUT = readFileSync("./input.txt", "utf8");
 
-let blocks = INPUT.split("\n");
+function parseInput(input) {
+  let blocks = input.split("\n");
 
-blocks = blocks.map((block) => {
-  return block.split(":")[1].trim().split(";");
-});
+  blocks = blocks.map((block) => {
+    return block.split(":")[1].trim().split(";");
+  });
 
-let games = blocks.map((game) => {
-  return game.map((play) => {
-    return play.split(",").map((result) => {
-      return result.trim();
+  let games = blocks.map((game) => {
+    return game.map((play) => {
+      return play.split(",").map((result) => {
+        return result.trim();
+      });
     });
   });
-});
 
-games = games.map((play) => {
-  return play.map((result) => {
-    const aux = {};
-    for (const idk of result) {
-      const idkSplited = idk.split(" ");
-      aux[idkSplited[1]] = parseInt(idkSplited[0]);
-    }
+  games = games.map((play) => {
+    return play.map((result) => {
+      const aux = {};
+      for (const idk of result) {
+        const idkSplited = idk.split(" ");
+        aux[idkSplited[1]] = parseInt(idkSplited[0]);
+      }
 
-    return aux;
+      return aux;
+    });
   });
-});
+
+  return games
+}
+
+const games = parseInput(INPUT);
 
 const currentCubes = {
   red: 12,

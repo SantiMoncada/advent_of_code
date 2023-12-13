@@ -50,8 +50,11 @@ function checkWins(card) {
   return wins;
 }
 
+/**
+ * @type {number[]}
+ */
 const scratChcards = new Array(data.length).fill(1);
-console.log({ scratChcards });
+
 for (let i = 0; i < data.length; i++) {
   const card = data[i];
 
