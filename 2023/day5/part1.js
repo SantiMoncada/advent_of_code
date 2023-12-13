@@ -86,6 +86,25 @@ function parseInput(input) {
   return data;
 }
 
+/**
+ * @param {number} origin
+ * @param {Range[]} ranges
+ * @returns {number}
+ */
+function mapToRange(origin, ranges) {
+  for (const range of ranges) {
+    if (
+      origin >= range.sourceRangeStart &&
+      origin < range.sourceRangeStart + range.rangeLength //could be less than equals
+    ) {
+      const offset = origin - range.sourceRangeStart;
+      return range.destinationRangeStart + offset;
+    }
+  }
+
+  return origin;
+}
+
 const output = parseInput(INPUT);
 
 /**
@@ -97,26 +116,12 @@ for (const seed of output.seeds) {
   seedMap[seed] = seed;
 }
 
-/**
- * @param {number} origin
- * @param {Range} range
- * @returns {number}
- */
-function mapToRange(origin, range) {
-  if (
-    origin >= range.sourceRangeStart &&
-    origin < range.sourceRangeStart + range.rangeLength //could be less than equals
-  ) {
-    const offset = origin - range.sourceRangeStart;
-    return range.destinationRangeStart + offset;
-  }
-  return origin;
-}
-
 console.log(
-  mapToRange(15, {
-    sourceRangeStart: 10,
-    rangeLength: 5,
-    destinationRangeStart: 20,
-  })
+  mapToRange(13, [
+    {
+      sourceRangeStart: 10,
+      rangeLength: 5,
+      destinationRangeStart: 20,
+    },
+  ])
 );
