@@ -1,12 +1,13 @@
 //@ts-check
 const { readFileSync } = require("fs");
 
-const INPUT = readFileSync("./testinput.txt", "utf8");
+const INPUT = readFileSync("./testinput2.txt", "utf8");
 
 /**
  * @typedef {{
  *  start : number,
  *  length: number,
+ *  original: number,
  * }} SeedRange
  *
  * @typedef {{
@@ -47,7 +48,7 @@ function parseSeeds(input) {
     const origin = list[i];
     const range = list[i + 1];
 
-    output.push({ start: origin, length: range });
+    output.push({ start: origin, length: range, original: origin });
   }
   return output;
 }
@@ -122,180 +123,205 @@ function parseInput(input) {
 
 /**
  * @param {SeedRange} seed
- * @param {Range} map
+ * @param {Range[]} maps
  *
- * @returns {SeedRange|null}
+ * @returns {SeedRange[]}
  */
-function mapSeed(seed, map) {
-  if (map.sourceRangeStart + map.rangeLength < seed.start) {
-    //1
-    return null;
+function mapSeed(seed, maps) {
+  const newSeeds = []
+  for(const map of maps){
+    if (map.sourceRangeStart + map.rangeLength < seed.start) {
+      //1
+      return [];
+    }
+  
+    if (seed.start + seed.length < map.sourceRangeStart) {
+      //2
+      return [];
+    }
+  
+    if (
+      map.sourceRangeStart <= seed.start &&
+      seed.start <= map.sourceRangeStart + map.rangeLength &&
+      map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
+    ) {
+      //3
+      const originStart = seed.start;
+  
+      const originEnd = map.sourceRangeStart + map.rangeLength;
+  
+      const delta = map.destinationRangeStart - map.sourceRangeStart;
+  
+      return [
+        {
+          start: originStart + delta,
+          length: originEnd - originStart,
+          original: seed.original,
+        },
+      ];
+    }
+  
+    if (
+      seed.start < map.sourceRangeStart &&
+      map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
+    ) {
+      //4
+      const originStart = map.sourceRangeStart;
+  
+      const delta = map.destinationRangeStart - map.sourceRangeStart;
+  
+      return [
+        {
+          start: originStart + delta,
+          length: map.rangeLength,
+          original: seed.original + map.sourceRangeStart - seed.start,
+        },
+      ];
+    }
+  
+    if (
+      map.sourceRangeStart <= seed.start + seed.length &&
+      seed.start <= map.sourceRangeStart &&
+      seed.start + seed.length < map.sourceRangeStart + map.rangeLength
+    ) {
+      //5
+      const originStart = map.sourceRangeStart;
+  
+      const originEnd = seed.start + seed.length;
+  
+      const delta = map.destinationRangeStart - map.sourceRangeStart;
+  
+      return [
+        {
+          start: originStart + delta,
+          length: originEnd - originStart,
+          original: seed.original + map.sourceRangeStart - seed.start,
+        },
+      ];
+    }
+  
+    if (
+      map.sourceRangeStart <= seed.start &&
+      seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
+    ) {
+      //6
+      const originStart = seed.start;
+  
+      const originEnd = seed.start + seed.length;
+  
+      const delta = map.destinationRangeStart - map.sourceRangeStart;
+  
+      return [
+        {
+          start: originStart + delta,
+          length: originEnd - originStart,
+          original: seed.original,
+        },
+      ];
+    }
+    throw new Error(
+      `unhandle map error ${JSON.stringify(seed)} ${JSON.stringify(map)}`
+      );
+      
   }
 
-  if (seed.start + seed.length < map.sourceRangeStart) {
-    //2
-    return null;
-  }
-
-  if (
-    map.sourceRangeStart < seed.start &&
-    seed.start < map.sourceRangeStart + map.rangeLength &&
-    map.sourceRangeStart + map.rangeLength < seed.start + seed.length
-  ) {
-    //3
-    const originStart = seed.start;
-
-    const originEnd = map.sourceRangeStart + map.rangeLength;
-
-    const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-    return { start: originStart + delta, length: originEnd - originStart };
-  }
-
-  if (
-    seed.start < map.sourceRangeStart &&
-    map.sourceRangeStart + map.rangeLength < seed.start + seed.length
-  ) {
-    //4
-    const originStart = map.sourceRangeStart;
-
-    const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-    return { start: originStart + delta, length: map.rangeLength };
-  }
-
-  if (
-    map.sourceRangeStart < seed.start + seed.length &&
-    seed.start < map.sourceRangeStart &&
-    seed.start + seed.length < map.sourceRangeStart + map.rangeLength
-  ) {
-    //5
-    const originStart = map.sourceRangeStart;
-
-    const originEnd = seed.start + seed.length;
-
-    const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-    return { start: originStart + delta, length: originEnd - originStart };
-  }
-
-  if (
-    map.sourceRangeStart < seed.start &&
-    seed.start + seed.length < map.sourceRangeStart + map.rangeLength
-  ) {
-    //6
-    const originStart = seed.start;
-
-    const originEnd = seed.start + seed.length;
-
-    const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-    return { start: originStart + delta, length: originEnd - originStart };
-  }
-  throw new Error(
-    `unhandle map error ${JSON.stringify(seed)} ${JSON.stringify(map)}`
-  );
+  return[]
 }
 
 const output = parseInput(INPUT);
-console.log(output);
 
 function idkTheWin() {
-  console.log("---------------------------");
-
   let seedRanges = output.seeds;
-  console.log({ seedRanges });
+  console.log(seedRanges);
   /**
-   * @type {Array<SeedRange>}
+   * @type {SeedRange[]}
    */
   let auxSeedRange = [];
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
-    for (const map of output.seedToSoil) {
-      const newRange = mapSeed(seedRange, map);
-      if (newRange !== null) {
-        auxSeedRange.push(newRange);
-      }
+
+      const seedRanges = mapSeed(seedRange, output.seedToSoil); 
     }
-    seedRanges = auxSeedRange;
   }
 
-  auxSeedRange = [];
-  for (const seedRange of seedRanges) {
-    for (const map of output.soilToFertilizer) {
-      const newRange = mapSeed(seedRange, map);
-      if (newRange !== null) {
-        auxSeedRange.push(newRange);
-      }
-    }
-    seedRanges = auxSeedRange;
-  }
 
-  auxSeedRange = [];
-  for (const seedRange of seedRanges) {
-    for (const map of output.fertilizerToWater) {
-      const newRange = mapSeed(seedRange, map);
-      if (newRange !== null) {
-        auxSeedRange.push(newRange);
-      }
-    }
-    seedRanges = auxSeedRange;
-  }
 
-  auxSeedRange = [];
-  for (const seedRange of seedRanges) {
-    for (const map of output.waterToLight) {
-      const newRange = mapSeed(seedRange, map);
-      if (newRange !== null) {
-        auxSeedRange.push(newRange);
-      }
-    }
-    seedRanges = auxSeedRange;
-  }
+  // auxSeedRange = [];
+  // for (const seedRange of seedRanges) {
+  //   for (const map of output.soilToFertilizer) {
+  //     const newRange = mapSeed(seedRange, map);
+  //     if (newRange !== null) {
+  //       auxSeedRange.push(...newRange);
+  //     }
+  //   }
+  //   seedRanges = auxSeedRange;
+  // }
 
-  auxSeedRange = [];
-  for (const seedRange of seedRanges) {
-    for (const map of output.lightToTemperature) {
-      const newRange = mapSeed(seedRange, map);
-      if (newRange !== null) {
-        auxSeedRange.push(newRange);
-      }
-    }
-    seedRanges = auxSeedRange;
-  }
+  // console.log(auxSeedRange);
 
-  auxSeedRange = [];
-  for (const seedRange of seedRanges) {
-    for (const map of output.temperatureToHumidity) {
-      const newRange = mapSeed(seedRange, map);
-      if (newRange !== null) {
-        auxSeedRange.push(newRange);
-      }
-    }
-    seedRanges = auxSeedRange;
-  }
+  // auxSeedRange = [];
+  // for (const seedRange of seedRanges) {
+  //   for (const map of output.fertilizerToWater) {
+  //     const newRange = mapSeed(seedRange, map);
+  //     if (newRange !== null) {
+  //       auxSeedRange.push(...newRange);
+  //     }
+  //   }
+  //   seedRanges = auxSeedRange;
+  // }
 
-  auxSeedRange = [];
-  for (const seedRange of seedRanges) {
-    for (const map of output.humidityToLocation) {
-      const newRange = mapSeed(seedRange, map);
-      if (newRange !== null) {
-        auxSeedRange.push(newRange);
-      }
-    }
-    seedRanges = auxSeedRange;
-  }
+  // auxSeedRange = [];
+  // for (const seedRange of seedRanges) {
+  //   for (const map of output.waterToLight) {
+  //     const newRange = mapSeed(seedRange, map);
+  //     if (newRange !== null) {
+  //       auxSeedRange.push(...newRange);
+  //     }
+  //   }
+  //   seedRanges = auxSeedRange;
+  // }
 
-  console.log(seedRanges);
+  // auxSeedRange = [];
+  // for (const seedRange of seedRanges) {
+  //   for (const map of output.lightToTemperature) {
+  //     const newRange = mapSeed(seedRange, map);
+  //     if (newRange !== null) {
+  //       auxSeedRange.push(...newRange);
+  //     }
+  //   }
+  //   seedRanges = auxSeedRange;
+  // }
+
+  // auxSeedRange = [];
+  // for (const seedRange of seedRanges) {
+  //   for (const map of output.temperatureToHumidity) {
+  //     const newRange = mapSeed(seedRange, map);
+  //     if (newRange !== null) {
+  //       auxSeedRange.push(...newRange);
+  //     }
+  //   }
+  //   seedRanges = auxSeedRange;
+  // }
+
+  // auxSeedRange = [];
+  // for (const seedRange of seedRanges) {
+  //   for (const map of output.humidityToLocation) {
+  //     const newRange = mapSeed(seedRange, map);
+  //     if (newRange !== null) {
+  //       auxSeedRange.push(...newRange);
+  //     }
+  //   }
+  //   seedRanges = auxSeedRange;
+  // }
+
+  return seedRanges;
 }
 
-const testSeed = { start: 4_242_091_162, length: 52_876_134 };
+const seedRanges = idkTheWin();
 
-const testMap = {
-  destinationRangeStart: 3_688_283_374,
-  sourceRangeStart: 3_968_162_731,
-  rangeLength: 326_804_565,
-};
+const starts = seedRanges.sort((a, b) => a.start - b.start);
 
-console.log(mapSeed(testSeed, testMap));
+// console.log(starts);
+
+//115756317 to  3541110360 is too high
