@@ -129,6 +129,7 @@ function parseInput(input) {
  * @returns {SeedRange[]}
  */
 function mapSeed(seed, maps) {
+  console.log({ seed, maps });
   /**
    * @type {SeedRange[]}
    */
@@ -145,7 +146,6 @@ function mapSeed(seed, maps) {
 
     if (seed.start + seed.length < map.sourceRangeStart) {
       //2
-
       continue;
     }
 
@@ -156,27 +156,24 @@ function mapSeed(seed, maps) {
     ) {
       //3
 
-      const originStart = seed.start;
-
-      const originEnd = map.sourceRangeStart + map.rangeLength;
-
       const delta = map.destinationRangeStart - map.sourceRangeStart;
-      console.log(delta);
+
       newSeeds.push({
-        start: originStart + delta,
-        length: originEnd - originStart + 1,
+        start: seed.start + delta,
+        length: map.sourceRangeStart + map.rangeLength - seed.start,
         original: seed.original,
       });
 
       oldSeeds.push({
-        start: map.sourceRangeStart + map.rangeLength + 1,
-        length: seed.start - map.sourceRangeStart,
-        original:
+        start: map.sourceRangeStart + map.rangeLength,
+        length:
           seed.original +
-          map.sourceRangeStart +
-          map.rangeLength -
-          seed.start +
+          seed.length -
+          map.sourceRangeStart -
+          map.rangeLength +
           1,
+        original:
+          seed.original + map.sourceRangeStart + map.rangeLength - seed.start,
       });
       continue;
     }
@@ -187,17 +184,28 @@ function mapSeed(seed, maps) {
     ) {
       //4
 
-      const originStart = map.sourceRangeStart;
-
       const delta = map.destinationRangeStart - map.sourceRangeStart;
 
       newSeeds.push({
-        start: originStart + delta,
+        start: map.sourceRangeStart + delta,
         length: map.rangeLength + 1,
         original: seed.original + map.sourceRangeStart - seed.start,
       });
 
-      oldSeeds.push({ original: seed.original });
+      oldSeeds.push({
+        start: seed.start,
+        length: map.sourceRangeStart - seed.start,
+        original: seed.original,
+      });
+
+      oldSeeds.push({
+        start: map.sourceRangeStart + map.rangeLength,
+        length:
+          seed.start + seed.length - map.sourceRangeStart - map.rangeLength + 2,
+        original:
+          map.sourceRangeStart - seed.start + map.rangeLength + seed.original,
+      });
+
       continue;
     }
 
@@ -208,28 +216,20 @@ function mapSeed(seed, maps) {
     ) {
       //5
 
-      const originStart = map.sourceRangeStart;
-
-      const originEnd = seed.start + seed.length;
-
       const delta = map.destinationRangeStart - map.sourceRangeStart;
 
       newSeeds.push({
-        start: originStart + delta,
-        length: originEnd - originStart,
+        start: map.destinationRangeStart,
+        length: seed.start + seed.length - map.sourceRangeStart + 1,
         original: seed.original + map.sourceRangeStart - seed.start,
       });
 
       oldSeeds.push({
-        original:
-          seed.original +
-          map.sourceRangeStart +
-          map.destinationRangeStart -
-          seed.start,
-        start: map.sourceRangeStart + map.destinationRangeStart,
-        length:
-          map.sourceRangeStart + map.rangeLength - seed.start - seed.length,
+        start: seed.start,
+        length: map.sourceRangeStart - seed.start + 1,
+        original: seed.original,
       });
+      continue;
     }
 
     if (
@@ -238,15 +238,13 @@ function mapSeed(seed, maps) {
     ) {
       //6
 
-      const originStart = seed.start;
-
       const originEnd = seed.start + seed.length;
 
       const delta = map.destinationRangeStart - map.sourceRangeStart;
 
       newSeeds.push({
-        start: originStart + delta,
-        length: originEnd - originStart,
+        start: seed.start + delta,
+        length: seed.length,
         original: seed.original,
       });
       continue;
@@ -257,6 +255,8 @@ function mapSeed(seed, maps) {
     );
   }
 
+  console.log([...newSeeds, ...oldSeeds]);
+  console.log("----------------------------------------------");
   return [...newSeeds, ...oldSeeds];
 }
 
@@ -277,6 +277,7 @@ function computeAnswer() {
   }
   seedRanges = auxSeedRange;
 
+  console.log(seedRanges);
   // auxSeedRange = [];
   // for (const seedRange of seedRanges) {
   //   for (const map of output.soilToFertilizer) {
@@ -373,7 +374,7 @@ function test() {
 
   testMapSeed(
     "Tests the case on the left 1",
-    [],
+    [{ start: 10, length: 10, original: 10 }],
     mapSeed({ start: 10, length: 10, original: 10 }, [
       { sourceRangeStart: 2, rangeLength: 2, destinationRangeStart: 100 },
     ])
@@ -381,7 +382,7 @@ function test() {
 
   testMapSeed(
     "Tests the case on the right 2",
-    [],
+    [{ start: 10, length: 10, original: 10 }],
     mapSeed({ start: 10, length: 10, original: 10 }, [
       { sourceRangeStart: 22, rangeLength: 2, destinationRangeStart: 100 },
     ])
@@ -390,8 +391,8 @@ function test() {
   testMapSeed(
     "Tests the case 3 on the left edge",
     [
-      { start: 106, length: 5, original: 10 },
-      { start: 15, length: 6, original: 15 },
+      { start: 106, length: 4, original: 10 },
+      { start: 14, length: 7, original: 14 },
     ],
     mapSeed({ start: 10, length: 10, original: 10 }, [
       { sourceRangeStart: 4, rangeLength: 10, destinationRangeStart: 100 },
@@ -403,7 +404,7 @@ function test() {
     [
       { start: 100, length: 6, original: 12 },
       { start: 10, length: 2, original: 10 },
-      { start: 18, length: 2, original: 20 },
+      { start: 17, length: 5, original: 17 },
     ],
     mapSeed({ start: 10, length: 10, original: 10 }, [
       { sourceRangeStart: 12, rangeLength: 5, destinationRangeStart: 100 },
@@ -413,7 +414,10 @@ function test() {
   //test work in progress
   testMapSeed(
     "Tests the case 5",
-    [],
+    [
+      { start: 100, length: 4, original: 17 },
+      { start: 10, length: 8, original: 10 },
+    ],
     mapSeed({ start: 10, length: 10, original: 10 }, [
       { sourceRangeStart: 17, rangeLength: 10, destinationRangeStart: 100 },
     ])
@@ -422,13 +426,14 @@ function test() {
   //test work in progress
   testMapSeed(
     "Tests the case 6",
-    [],
+    [{ start: 106, length: 10, original: 10 }],
     mapSeed({ start: 10, length: 10, original: 10 }, [
       { sourceRangeStart: 4, rangeLength: 20, destinationRangeStart: 100 },
     ])
   );
 }
 
+// computeAnswer();
 test();
 // console.log(starts);
 
