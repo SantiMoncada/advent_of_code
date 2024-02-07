@@ -1,0 +1,7 @@
+for each seed
+    declare newSeed array
+    for each map
+        if intersection
+            map seed range to newSeed
+            delete maped range from seed
+    copy left over seeds to newSeeds

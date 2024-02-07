@@ -1,5 +1,5 @@
-//@ts-check
 const { readFileSync } = require("fs");
+//@ts-check
 
 const INPUT = readFileSync("./testinput2.txt", "utf8");
 
@@ -59,7 +59,8 @@ function parseSeeds(input) {
  * @returns {Almanac}
  */
 function parseInput(input) {
-  const lines = input.split("\n");
+  const lines = input.split("\r\n");
+
   /**
    * @type {Almanac}
    */
@@ -122,24 +123,31 @@ function parseInput(input) {
 }
 
 /**
+ *
+ * @param {SeedRange} range
+ * @param {*} rangeToDelete
+ */
+function deleteRange(range, rangeToDelete) {}
+
+/**
  * @param {SeedRange} seed
  * @param {Range[]} maps
  *
  * @returns {SeedRange[]}
  */
 function mapSeed(seed, maps) {
-  const newSeeds = []
-  for(const map of maps){
+  const newSeeds = [];
+  for (const map of maps) {
     if (map.sourceRangeStart + map.rangeLength < seed.start) {
       //1
       return [];
     }
-  
+
     if (seed.start + seed.length < map.sourceRangeStart) {
       //2
       return [];
     }
-  
+
     if (
       map.sourceRangeStart <= seed.start &&
       seed.start <= map.sourceRangeStart + map.rangeLength &&
@@ -147,29 +155,37 @@ function mapSeed(seed, maps) {
     ) {
       //3
       const originStart = seed.start;
-  
+
       const originEnd = map.sourceRangeStart + map.rangeLength;
-  
+
       const delta = map.destinationRangeStart - map.sourceRangeStart;
-  
-      return [
-        {
-          start: originStart + delta,
-          length: originEnd - originStart,
-          original: seed.original,
-        },
-      ];
+
+      newSeeds.push({
+        start: originStart + delta,
+        length: originEnd - originStart,
+        original: seed.original,
+      });
+
+      seed.original =
+        seed.original + (map.sourceRangeStart + map.rangeLength) - seed.start;
+      seed.start = map.sourceRangeStart + map.rangeLength;
     }
-  
+
     if (
       seed.start < map.sourceRangeStart &&
       map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
     ) {
       //4
       const originStart = map.sourceRangeStart;
-  
+
       const delta = map.destinationRangeStart - map.sourceRangeStart;
-  
+
+      newSeeds.push({
+        start: originStart + delta,
+        length: map.rangeLength,
+        original: seed.original + map.sourceRangeStart - seed.start,
+      });
+      
       return [
         {
           start: originStart + delta,
@@ -178,7 +194,7 @@ function mapSeed(seed, maps) {
         },
       ];
     }
-  
+
     if (
       map.sourceRangeStart <= seed.start + seed.length &&
       seed.start <= map.sourceRangeStart &&
@@ -186,11 +202,11 @@ function mapSeed(seed, maps) {
     ) {
       //5
       const originStart = map.sourceRangeStart;
-  
+
       const originEnd = seed.start + seed.length;
-  
+
       const delta = map.destinationRangeStart - map.sourceRangeStart;
-  
+
       return [
         {
           start: originStart + delta,
@@ -199,18 +215,18 @@ function mapSeed(seed, maps) {
         },
       ];
     }
-  
+
     if (
       map.sourceRangeStart <= seed.start &&
       seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
     ) {
       //6
       const originStart = seed.start;
-  
+
       const originEnd = seed.start + seed.length;
-  
+
       const delta = map.destinationRangeStart - map.sourceRangeStart;
-  
+
       return [
         {
           start: originStart + delta,
@@ -221,11 +237,10 @@ function mapSeed(seed, maps) {
     }
     throw new Error(
       `unhandle map error ${JSON.stringify(seed)} ${JSON.stringify(map)}`
-      );
-      
+    );
   }
 
-  return[]
+  return [];
 }
 
 const output = parseInput(INPUT);
@@ -240,12 +255,9 @@ function idkTheWin() {
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
-
-      const seedRanges = mapSeed(seedRange, output.seedToSoil); 
-    }
+    const newSeedRanges = mapSeed(seedRange, output.seedToSoil);
+    auxSeedRange.push(...newSeedRanges)
   }
-
-
 
   // auxSeedRange = [];
   // for (const seedRange of seedRanges) {
