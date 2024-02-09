@@ -27,7 +27,7 @@ const INPUT = readFileSync("./input.txt", "utf8");
  * @returns {Almanac}
  */
 function parseInput(input) {
-  const lines = input.split("\n");
+  const lines = input.split("\r\n");
   /**
    * @type {Almanac}
    */
@@ -112,50 +112,43 @@ function mapToRange(origin, ranges) {
 
 const output = parseInput(INPUT);
 
-/**
- * @type {Map<number,number>}
- */
+/** @type {Map<number,number>}*/
 const seedMap = new Map();
 
+/**  @type {number[]}*/
+const seeds = [];
+
 for (const seed of output.seeds) {
+  seeds.push(seed);
   seedMap.set(seed, seed);
 }
 
-for (const [key, value] of seedMap) {
-  seedMap.set(key, mapToRange(value, output.seedToSoil));
+for (let i = 0; i < seeds.length; i++) {
+  seeds[i] = mapToRange(seeds[i], output.seedToSoil);
 }
 
-for (const [key, value] of seedMap) {
-  seedMap.set(key, mapToRange(value, output.soilToFertilizer));
+for (let i = 0; i < seeds.length; i++) {
+  seeds[i] = mapToRange(seeds[i], output.soilToFertilizer);
 }
 
-for (const [key, value] of seedMap) {
-  seedMap.set(key, mapToRange(value, output.fertilizerToWater));
+for (let i = 0; i < seeds.length; i++) {
+  seeds[i] = mapToRange(seeds[i], output.fertilizerToWater);
 }
 
-for (const [key, value] of seedMap) {
-  seedMap.set(key, mapToRange(value, output.waterToLight));
+for (let i = 0; i < seeds.length; i++) {
+  seeds[i] = mapToRange(seeds[i], output.waterToLight);
 }
 
-for (const [key, value] of seedMap) {
-  seedMap.set(key, mapToRange(value, output.lightToTemperature));
+for (let i = 0; i < seeds.length; i++) {
+  seeds[i] = mapToRange(seeds[i], output.lightToTemperature);
 }
 
-for (const [key, value] of seedMap) {
-  seedMap.set(key, mapToRange(value, output.temperatureToHumidity));
+for (let i = 0; i < seeds.length; i++) {
+  seeds[i] = mapToRange(seeds[i], output.temperatureToHumidity);
 }
 
-for (const [key, value] of seedMap) {
-  seedMap.set(key, mapToRange(value, output.humidityToLocation));
-}
-console.log(seedMap);
-
-let min = Infinity;
-
-for (const [_, value] of seedMap) {
-  if (value < min) {
-    min = value;
-  }
+for (let i = 0; i < seeds.length; i++) {
+  seeds[i] = mapToRange(seeds[i], output.humidityToLocation);
 }
 
-console.log({ min });
+console.log(Math.min(...seeds));
