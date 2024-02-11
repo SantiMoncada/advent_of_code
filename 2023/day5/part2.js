@@ -7,7 +7,6 @@ const INPUT = readFileSync("./testinput2.txt", "utf8");
  * @typedef {{
  *  start : number,
  *  length: number,
- *  original: number,
  * }} SeedRange
  *
  * @typedef {{
@@ -48,7 +47,7 @@ function parseSeeds(input) {
     const origin = list[i];
     const range = list[i + 1];
 
-    output.push({ start: origin, length: range, original: origin });
+    output.push({ start: origin, length: range });
   }
   return output;
 }
@@ -150,6 +149,21 @@ function mapSeed(seed, maps) {
 
     if (
       map.sourceRangeStart <= seed.start &&
+      seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
+    ) {
+      //6
+
+      const delta = map.destinationRangeStart - map.sourceRangeStart;
+
+      newSeeds.push({
+        start: seed.start + delta,
+        length: seed.length,
+      });
+      continue;
+    }
+
+    if (
+      map.sourceRangeStart <= seed.start &&
       seed.start <= map.sourceRangeStart + map.rangeLength &&
       map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
     ) {
@@ -160,19 +174,12 @@ function mapSeed(seed, maps) {
       newSeeds.push({
         start: seed.start + delta,
         length: map.sourceRangeStart + map.rangeLength - seed.start,
-        original: seed.original,
       });
 
       oldSeeds.push({
         start: map.sourceRangeStart + map.rangeLength,
         length:
-          seed.original +
-          seed.length -
-          map.sourceRangeStart -
-          map.rangeLength +
-          1,
-        original:
-          seed.original + map.sourceRangeStart + map.rangeLength - seed.start,
+          seed.start + seed.length - map.sourceRangeStart - map.rangeLength + 1,
       });
       continue;
     }
@@ -188,21 +195,17 @@ function mapSeed(seed, maps) {
       newSeeds.push({
         start: map.sourceRangeStart + delta,
         length: map.rangeLength + 1,
-        original: seed.original + map.sourceRangeStart - seed.start,
       });
 
       oldSeeds.push({
         start: seed.start,
         length: map.sourceRangeStart - seed.start,
-        original: seed.original,
       });
 
       oldSeeds.push({
         start: map.sourceRangeStart + map.rangeLength,
         length:
           seed.start + seed.length - map.sourceRangeStart - map.rangeLength + 2,
-        original:
-          map.sourceRangeStart - seed.start + map.rangeLength + seed.original,
       });
 
       continue;
@@ -220,31 +223,11 @@ function mapSeed(seed, maps) {
       newSeeds.push({
         start: map.destinationRangeStart,
         length: seed.start + seed.length - map.sourceRangeStart + 1,
-        original: seed.original + map.sourceRangeStart - seed.start,
       });
 
       oldSeeds.push({
         start: seed.start,
         length: map.sourceRangeStart - seed.start + 1,
-        original: seed.original,
-      });
-      continue;
-    }
-
-    if (
-      map.sourceRangeStart <= seed.start &&
-      seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
-    ) {
-      //6
-
-      const originEnd = seed.start + seed.length;
-
-      const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-      newSeeds.push({
-        start: seed.start + delta,
-        length: seed.length,
-        original: seed.original,
       });
       continue;
     }
@@ -339,28 +322,32 @@ function test() {
    * @param {SeedRange[]} b
    */
   function testMapSeed(msg, a, b) {
-    assert(
-      JSON.stringify(a) === JSON.stringify(b),
-      `${msg}\n the values are \n ${JSON.stringify(
-        a
-      )} \n and \n ${JSON.stringify(b)}
-      \n
-      `
-    );
+    try {
+      assert(
+        JSON.stringify(a) === JSON.stringify(b),
+        `${msg}\n the values are \n ${JSON.stringify(
+          a
+        )} \n and \n ${JSON.stringify(b)}
+        \n
+        `
+      );
+    } catch (error) {
+      console.error(error.message);
+    }
   }
 
   testMapSeed(
     "Tests the case on the left 1",
-    [{ start: 10, length: 10, original: 10 }],
-    mapSeed({ start: 10, length: 10, original: 10 }, [
+    [{ start: 10, length: 10 }],
+    mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 2, rangeLength: 2, destinationRangeStart: 100 },
     ])
   );
 
   testMapSeed(
     "Tests the case on the right 2",
-    [{ start: 10, length: 10, original: 10 }],
-    mapSeed({ start: 10, length: 10, original: 10 }, [
+    [{ start: 10, length: 10 }],
+    mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 22, rangeLength: 2, destinationRangeStart: 100 },
     ])
   );
@@ -368,10 +355,10 @@ function test() {
   testMapSeed(
     "Tests the case 3 on the left edge",
     [
-      { start: 106, length: 4, original: 10 },
-      { start: 14, length: 7, original: 14 },
+      { start: 106, length: 4 },
+      { start: 14, length: 7 },
     ],
-    mapSeed({ start: 10, length: 10, original: 10 }, [
+    mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 4, rangeLength: 10, destinationRangeStart: 100 },
     ])
   );
@@ -379,11 +366,11 @@ function test() {
   testMapSeed(
     "Tests the case 4",
     [
-      { start: 100, length: 6, original: 12 },
-      { start: 10, length: 2, original: 10 },
-      { start: 17, length: 5, original: 17 },
+      { start: 100, length: 6 },
+      { start: 10, length: 2 },
+      { start: 17, length: 5 },
     ],
-    mapSeed({ start: 10, length: 10, original: 10 }, [
+    mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 12, rangeLength: 5, destinationRangeStart: 100 },
     ])
   );
@@ -391,34 +378,123 @@ function test() {
   testMapSeed(
     "Tests the case 5",
     [
-      { start: 100, length: 4, original: 17 },
-      { start: 10, length: 8, original: 10 },
+      { start: 100, length: 4 },
+      { start: 10, length: 8 },
     ],
-    mapSeed({ start: 10, length: 10, original: 10 }, [
+    mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 17, rangeLength: 10, destinationRangeStart: 100 },
     ])
   );
 
   testMapSeed(
     "Tests the case 6",
-    [{ start: 106, length: 10, original: 10 }],
-    mapSeed({ start: 10, length: 10, original: 10 }, [
+    [{ start: 106, length: 10 }],
+    mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 4, rangeLength: 20, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "point seed on the left of the map",
+    [{ start: 100, length: 1 }],
+    mapSeed({ start: 10, length: 1 }, [
+      { sourceRangeStart: 10, rangeLength: 20, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "point seed on the outside left of the map",
+    [{ start: 9, length: 1 }],
+    mapSeed({ start: 9, length: 1 }, [
+      { sourceRangeStart: 10, rangeLength: 20, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "point seed on the right of the map",
+    [{ start: 109, length: 1 }],
+    mapSeed({ start: 19, length: 1 }, [
+      { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "point seed on the outside right of the map",
+    [{ start: 10, length: 1 }],
+    mapSeed({ start: 10, length: 1 }, [
+      { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "match the seed and the range",
+    [{ start: 100, length: 10 }],
+    mapSeed({ start: 10, length: 10 }, [
+      { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "match just uder the seed and the range",
+    [
+      { start: 100, length: 7 },
+      { start: 11, length: 1 },
+      { start: 18, length: 1 },
+    ],
+    mapSeed({ start: 10, length: 10 }, [
+      { sourceRangeStart: 11, rangeLength: 8, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "Rigth seed starting on the right range",
+    [
+      { start: 109, length: 1 },
+      { start: 20, length: 8 },
+    ],
+    mapSeed({ start: 19, length: 10 }, [
+      { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "Left seed starting on the left range",
+    [
+      { start: 100, length: 1 },
+      { start: 3, length: 9 },
+    ],
+    mapSeed({ start: 3, length: 8 }, [
+      { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "Seed and map starting at the left of seed",
+    [
+      { start: 100, length: 5 },
+      { start: 15, length: 5 },
+    ],
+    mapSeed({ start: 10, length: 10 }, [
+      { sourceRangeStart: 10, rangeLength: 5, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "Seed and map starting at the right of seed",
+    [
+      { start: 100, length: 5 },
+      { start: 15, length: 5 },
+    ],
+    mapSeed({ start: 10, length: 10 }, [
+      { sourceRangeStart: 15, rangeLength: 5, destinationRangeStart: 100 },
     ])
   );
 }
 
-let locations = computeAnswer();
+test();
 
-locations = locations.sort((a, b) => a.original - b.original);
+// let locations = computeAnswer();
 
-console.log(locations);
-// console.log(starts);
+// locations = locations.sort((a, b) => a.start - b.start);
 
-//3 541 110 360 is too high
-
-//693 464 too low
-
-//1 320 2543 too low
-
-//23428765 ??
+// console.log(locations);
