@@ -1,7 +1,7 @@
 //@ts-check
 const { readFileSync } = require("fs");
 
-const INPUT = readFileSync("./testinput2.txt", "utf8");
+const INPUT = readFileSync("./input.txt", "utf8");
 
 /**
  * @typedef {{
@@ -137,22 +137,23 @@ function mapSeed(seed, maps) {
    */
   const newSeeds = [];
   for (const map of maps) {
-    if (map.sourceRangeStart + map.rangeLength < seed.start) {
+    if (map.sourceRangeStart + map.rangeLength - 1 < seed.start) {
       //1
+      console.log("1");
       continue;
     }
 
-    if (seed.start + seed.length < map.sourceRangeStart) {
+    if (seed.start + seed.length - 1 < map.sourceRangeStart) {
       //2
+      console.log("2");
       continue;
     }
-
     if (
       map.sourceRangeStart <= seed.start &&
       seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
     ) {
       //6
-
+      console.log("6");
       const delta = map.destinationRangeStart - map.sourceRangeStart;
 
       newSeeds.push({
@@ -168,7 +169,7 @@ function mapSeed(seed, maps) {
       map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
     ) {
       //3
-
+      console.log("3");
       const delta = map.destinationRangeStart - map.sourceRangeStart;
 
       newSeeds.push({
@@ -179,7 +180,28 @@ function mapSeed(seed, maps) {
       oldSeeds.push({
         start: map.sourceRangeStart + map.rangeLength,
         length:
-          seed.start + seed.length - map.sourceRangeStart - map.rangeLength + 1,
+          seed.start + seed.length - map.sourceRangeStart - map.rangeLength,
+      });
+      continue;
+    }
+
+    if (
+      map.sourceRangeStart <= seed.start + seed.length &&
+      seed.start <= map.sourceRangeStart &&
+      seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
+    ) {
+      //5
+      console.log("5");
+      const delta = map.destinationRangeStart - map.sourceRangeStart;
+
+      newSeeds.push({
+        start: map.destinationRangeStart,
+        length: seed.start + seed.length - map.sourceRangeStart,
+      });
+
+      oldSeeds.push({
+        start: seed.start,
+        length: map.sourceRangeStart - seed.start,
       });
       continue;
     }
@@ -189,12 +211,12 @@ function mapSeed(seed, maps) {
       map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
     ) {
       //4
-
+      console.log("4");
       const delta = map.destinationRangeStart - map.sourceRangeStart;
 
       newSeeds.push({
         start: map.sourceRangeStart + delta,
-        length: map.rangeLength + 1,
+        length: map.rangeLength,
       });
 
       oldSeeds.push({
@@ -205,30 +227,9 @@ function mapSeed(seed, maps) {
       oldSeeds.push({
         start: map.sourceRangeStart + map.rangeLength,
         length:
-          seed.start + seed.length - map.sourceRangeStart - map.rangeLength + 2,
+          seed.start + seed.length - map.sourceRangeStart - map.rangeLength,
       });
 
-      continue;
-    }
-
-    if (
-      map.sourceRangeStart <= seed.start + seed.length &&
-      seed.start <= map.sourceRangeStart &&
-      seed.start + seed.length < map.sourceRangeStart + map.rangeLength
-    ) {
-      //5
-
-      const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-      newSeeds.push({
-        start: map.destinationRangeStart,
-        length: seed.start + seed.length - map.sourceRangeStart + 1,
-      });
-
-      oldSeeds.push({
-        start: seed.start,
-        length: map.sourceRangeStart - seed.start + 1,
-      });
       continue;
     }
 
@@ -238,9 +239,15 @@ function mapSeed(seed, maps) {
   }
 
   const output = [...newSeeds, ...oldSeeds];
+  output.forEach((output) => {
+    if (output.length === 0) {
+      throw new Error(`wtf 0 ${JSON.stringify(seed)} ${JSON.stringify(maps)}`);
+    }
+  });
   if (output.length === 0) {
     return [seed];
   }
+
   return output;
 }
 
@@ -318,16 +325,16 @@ function test() {
 
   /**
    * @param {string} msg
-   * @param {SeedRange[]} a
-   * @param {SeedRange[]} b
+   * @param {SeedRange[]} expected
+   * @param {SeedRange[]} actual
    */
-  function testMapSeed(msg, a, b) {
+  function testMapSeed(msg, expected, actual) {
     try {
       assert(
-        JSON.stringify(a) === JSON.stringify(b),
-        `${msg}\n the values are \n ${JSON.stringify(
-          a
-        )} \n and \n ${JSON.stringify(b)}
+        JSON.stringify(expected) === JSON.stringify(actual),
+        `${msg}\n the expected values are \n ${JSON.stringify(
+          expected
+        )} \n and te actual values were \n ${JSON.stringify(actual)}
         \n
         `
       );
@@ -356,7 +363,7 @@ function test() {
     "Tests the case 3 on the left edge",
     [
       { start: 106, length: 4 },
-      { start: 14, length: 7 },
+      { start: 14, length: 6 },
     ],
     mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 4, rangeLength: 10, destinationRangeStart: 100 },
@@ -366,9 +373,9 @@ function test() {
   testMapSeed(
     "Tests the case 4",
     [
-      { start: 100, length: 6 },
+      { start: 100, length: 5 },
       { start: 10, length: 2 },
-      { start: 17, length: 5 },
+      { start: 17, length: 3 },
     ],
     mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 12, rangeLength: 5, destinationRangeStart: 100 },
@@ -378,8 +385,8 @@ function test() {
   testMapSeed(
     "Tests the case 5",
     [
-      { start: 100, length: 4 },
-      { start: 10, length: 8 },
+      { start: 100, length: 3 },
+      { start: 10, length: 7 },
     ],
     mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 17, rangeLength: 10, destinationRangeStart: 100 },
@@ -406,7 +413,7 @@ function test() {
     "point seed on the outside left of the map",
     [{ start: 9, length: 1 }],
     mapSeed({ start: 9, length: 1 }, [
-      { sourceRangeStart: 10, rangeLength: 20, destinationRangeStart: 100 },
+      { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
     ])
   );
 
@@ -420,7 +427,7 @@ function test() {
 
   testMapSeed(
     "point seed on the outside right of the map",
-    [{ start: 10, length: 1 }],
+    [{ start: 100, length: 1 }],
     mapSeed({ start: 10, length: 1 }, [
       { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
     ])
@@ -437,9 +444,9 @@ function test() {
   testMapSeed(
     "match just uder the seed and the range",
     [
-      { start: 100, length: 7 },
-      { start: 11, length: 1 },
-      { start: 18, length: 1 },
+      { start: 100, length: 8 },
+      { start: 10, length: 1 },
+      { start: 19, length: 1 },
     ],
     mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 11, rangeLength: 8, destinationRangeStart: 100 },
@@ -450,7 +457,7 @@ function test() {
     "Rigth seed starting on the right range",
     [
       { start: 109, length: 1 },
-      { start: 20, length: 8 },
+      { start: 20, length: 9 },
     ],
     mapSeed({ start: 19, length: 10 }, [
       { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
@@ -461,7 +468,7 @@ function test() {
     "Left seed starting on the left range",
     [
       { start: 100, length: 1 },
-      { start: 3, length: 9 },
+      { start: 3, length: 7 },
     ],
     mapSeed({ start: 3, length: 8 }, [
       { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
@@ -483,18 +490,31 @@ function test() {
     "Seed and map starting at the right of seed",
     [
       { start: 100, length: 5 },
-      { start: 15, length: 5 },
+      { start: 10, length: 5 },
     ],
     mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 15, rangeLength: 5, destinationRangeStart: 100 },
+    ])
+  );
+
+  testMapSeed(
+    "Bug going on 3 in the testinput2",
+    [{ start: 49, length: 1 }],
+    mapSeed({ start: 53, length: 1 }, [
+      { destinationRangeStart: 49, sourceRangeStart: 53, rangeLength: 8 },
+      { destinationRangeStart: 0, sourceRangeStart: 11, rangeLength: 42 },
+      { destinationRangeStart: 42, sourceRangeStart: 0, rangeLength: 7 },
+      { destinationRangeStart: 57, sourceRangeStart: 7, rangeLength: 4 },
     ])
   );
 }
 
 test();
 
-// let locations = computeAnswer();
+let locations = computeAnswer();
 
-// locations = locations.sort((a, b) => a.start - b.start);
+locations = locations.sort((a, b) => a.start - b.start);
 
-// console.log(locations);
+console.log(locations);
+
+console.log(locations[0].start);
