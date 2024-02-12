@@ -1,7 +1,8 @@
 //@ts-check
 const { readFileSync } = require("fs");
 
-const INPUT = readFileSync("./input.txt", "utf8");
+const INPUT = readFileSync("./2023/day5/testinput2.txt", "utf8");
+// const INPUT = readFileSync("./testinput2.txt", "utf8");
 
 /**
  * @typedef {{
@@ -128,134 +129,170 @@ function parseInput(input) {
  * @returns {SeedRange[]}
  */
 function mapSeed(seed, maps) {
+  //asume no overlap in maps
+  const sortedMaps = maps.sort((a, b) => {
+    return a.sourceRangeStart - b.sourceRangeStart;
+  });
   /**
    * @type {SeedRange[]}
    */
-  const oldSeeds = [];
-  /**
-   * @type {SeedRange[]}
-   */
-  const newSeeds = [];
-  for (const map of maps) {
-    if (map.sourceRangeStart + map.rangeLength - 1 < seed.start) {
-      //1
-      console.log("1");
-      continue;
-    }
+  const mappedSeeds = [];
 
-    if (seed.start + seed.length - 1 < map.sourceRangeStart) {
-      //2
-      console.log("2");
-      continue;
-    }
+  let lastNotChecked = 0;
+  for (let i = 0; i < sortedMaps.length; i++) {
+    const currentMap = sortedMaps[i];
+    //check for seed between lastChecked and the start of current map
+
+    //1
     if (
-      map.sourceRangeStart <= seed.start &&
-      seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
+      seed.start < lastNotChecked &&
+      seed.start + seed.length > lastNotChecked &&
+      seed.start + seed.length < currentMap.sourceRangeStart
     ) {
-      //6
-      console.log("6");
-      const delta = map.destinationRangeStart - map.sourceRangeStart;
+      console.log("1");
+      mappedSeeds.push({
+        start: lastNotChecked,
+        length: seed.start + seed.length - lastNotChecked,
+      });
+    }
 
-      newSeeds.push({
-        start: seed.start + delta,
+    //2
+    if (
+      lastNotChecked <= seed.start &&
+      seed.start <= currentMap.sourceRangeStart - 1 &&
+      seed.start + seed.length - 1 >= lastNotChecked &&
+      seed.start + seed.length - 1 <= currentMap.sourceRangeStart - 1
+    ) {
+      console.log("2");
+      mappedSeeds.push({
+        start: seed.start,
         length: seed.length,
       });
-      continue;
     }
 
+    //3
     if (
-      map.sourceRangeStart <= seed.start &&
-      seed.start <= map.sourceRangeStart + map.rangeLength &&
-      map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
+      seed.start > lastNotChecked &&
+      seed.start <= currentMap.sourceRangeStart - 1 &&
+      seed.start + seed.length > currentMap.sourceRangeStart
     ) {
-      //3
       console.log("3");
-      const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-      newSeeds.push({
-        start: seed.start + delta,
-        length: map.sourceRangeStart + map.rangeLength - seed.start,
-      });
-
-      oldSeeds.push({
-        start: map.sourceRangeStart + map.rangeLength,
-        length:
-          seed.start + seed.length - map.sourceRangeStart - map.rangeLength,
-      });
-      continue;
-    }
-
-    if (
-      map.sourceRangeStart <= seed.start + seed.length &&
-      seed.start <= map.sourceRangeStart &&
-      seed.start + seed.length <= map.sourceRangeStart + map.rangeLength
-    ) {
-      //5
-      console.log("5");
-      const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-      newSeeds.push({
-        start: map.destinationRangeStart,
-        length: seed.start + seed.length - map.sourceRangeStart,
-      });
-
-      oldSeeds.push({
+      mappedSeeds.push({
         start: seed.start,
-        length: map.sourceRangeStart - seed.start,
+        length: currentMap.sourceRangeStart - seed.start,
       });
-      continue;
     }
 
+    //4
     if (
-      seed.start < map.sourceRangeStart &&
-      map.sourceRangeStart + map.rangeLength <= seed.start + seed.length
+      seed.start < lastNotChecked &&
+      currentMap.sourceRangeStart - 1 < seed.start + seed.length
     ) {
-      //4
       console.log("4");
-      const delta = map.destinationRangeStart - map.sourceRangeStart;
-
-      newSeeds.push({
-        start: map.sourceRangeStart + delta,
-        length: map.rangeLength,
+      mappedSeeds.push({
+        start: lastNotChecked,
+        length: currentMap.sourceRangeStart - 1 - lastNotChecked,
       });
+    }
 
-      oldSeeds.push({
-        start: seed.start,
-        length: map.sourceRangeStart - seed.start,
+    //now we check inside the map
+
+    //1m
+    if (
+      seed.start < currentMap.sourceRangeStart &&
+      seed.start + seed.length > currentMap.sourceRangeStart &&
+      seed.start + seed.length <
+        currentMap.sourceRangeStart + currentMap.rangeLength
+    ) {
+      console.log("1m");
+      mappedSeeds.push({
+        start: currentMap.destinationRangeStart,
+        length: seed.start + seed.length - currentMap.sourceRangeStart,
       });
+    }
 
-      oldSeeds.push({
-        start: map.sourceRangeStart + map.rangeLength,
+    //2m
+    if (
+      currentMap.sourceRangeStart <= seed.start &&
+      seed.start <= currentMap.sourceRangeStart + currentMap.rangeLength - 1 &&
+      seed.start + seed.length - 1 >= currentMap.sourceRangeStart &&
+      seed.start + seed.length - 1 <=
+        currentMap.sourceRangeStart + currentMap.rangeLength
+    ) {
+      console.log("2m");
+      mappedSeeds.push({
+        start:
+          currentMap.destinationRangeStart +
+          seed.start -
+          currentMap.sourceRangeStart,
+        length: seed.length,
+      });
+    }
+
+    //3m
+    if (
+      seed.start > currentMap.sourceRangeStart &&
+      seed.start < currentMap.sourceRangeStart + currentMap.rangeLength &&
+      seed.start + seed.length >
+        currentMap.sourceRangeStart + currentMap.rangeLength
+    ) {
+      console.log("3m");
+      mappedSeeds.push({
+        start:
+          currentMap.destinationRangeStart +
+          seed.start -
+          currentMap.sourceRangeStart,
         length:
-          seed.start + seed.length - map.sourceRangeStart - map.rangeLength,
+          currentMap.sourceRangeStart + currentMap.rangeLength - seed.start,
       });
-
-      continue;
     }
 
-    throw new Error(
-      `unhandle map error ${JSON.stringify(seed)} ${JSON.stringify(map)}`
-    );
-  }
-
-  const output = [...newSeeds, ...oldSeeds];
-  output.forEach((output) => {
-    if (output.length === 0) {
-      throw new Error(`wtf 0 ${JSON.stringify(seed)} ${JSON.stringify(maps)}`);
+    //4m
+    if (
+      seed.start < currentMap.sourceRangeStart &&
+      currentMap.sourceRangeStart + currentMap.rangeLength <
+        seed.start + seed.length
+    ) {
+      console.log("4m");
+      mappedSeeds.push({
+        start: currentMap.destinationRangeStart,
+        length: currentMap.rangeLength,
+      });
     }
-  });
-  if (output.length === 0) {
-    return [seed];
+
+    lastNotChecked = currentMap.sourceRangeStart + currentMap.rangeLength;
   }
 
-  return output;
+  //check any remaining seeds on the right to infinity
+  if (
+    seed.start < lastNotChecked &&
+    lastNotChecked <= seed.start + seed.length - 1
+  ) {
+    console.log("1e");
+    mappedSeeds.push({
+      start: lastNotChecked,
+      length: seed.start + seed.length - lastNotChecked,
+    });
+  }
+
+  if (
+    lastNotChecked <= seed.start &&
+    lastNotChecked <= seed.start + seed.length - 1
+  ) {
+    console.log("2e");
+    mappedSeeds.push({
+      start: seed.start,
+      length: seed.length,
+    });
+  }
+
+  return mappedSeeds;
 }
 
-const output = parseInput(INPUT);
-
 function computeAnswer() {
+  const output = parseInput(INPUT);
   let seedRanges = output.seeds;
-  console.log(seedRanges);
+  // console.log(seedRanges);
   /**
    * @type {SeedRange[]}
    */
@@ -267,7 +304,7 @@ function computeAnswer() {
     auxSeedRange.push(...newSeedRanges);
   }
   seedRanges = auxSeedRange;
-  console.log(seedRanges);
+  // console.log(seedRanges);
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
@@ -275,7 +312,7 @@ function computeAnswer() {
     auxSeedRange.push(...newSeedRanges);
   }
   seedRanges = auxSeedRange;
-  console.log(seedRanges);
+  // console.log(seedRanges);
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
@@ -283,7 +320,7 @@ function computeAnswer() {
     auxSeedRange.push(...newSeedRanges);
   }
   seedRanges = auxSeedRange;
-  console.log(seedRanges);
+  // console.log(seedRanges);
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
@@ -291,7 +328,7 @@ function computeAnswer() {
     auxSeedRange.push(...newSeedRanges);
   }
   seedRanges = auxSeedRange;
-  console.log(seedRanges);
+  // console.log(seedRanges);
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
@@ -299,7 +336,7 @@ function computeAnswer() {
     auxSeedRange.push(...newSeedRanges);
   }
   seedRanges = auxSeedRange;
-  console.log(seedRanges);
+  // console.log(seedRanges);
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
@@ -307,7 +344,7 @@ function computeAnswer() {
     auxSeedRange.push(...newSeedRanges);
   }
   seedRanges = auxSeedRange;
-  console.log(seedRanges);
+  // console.log(seedRanges);
 
   auxSeedRange = [];
   for (const seedRange of seedRanges) {
@@ -315,7 +352,7 @@ function computeAnswer() {
     auxSeedRange.push(...newSeedRanges);
   }
   seedRanges = auxSeedRange;
-  console.log(seedRanges);
+  // console.log(seedRanges);
 
   return seedRanges;
 }
@@ -328,16 +365,17 @@ function test() {
    * @param {SeedRange[]} expected
    * @param {SeedRange[]} actual
    */
-  function testMapSeed(msg, expected, actual) {
+  function testMapSeed(msg, actual, expected) {
     try {
       assert(
         JSON.stringify(expected) === JSON.stringify(actual),
-        `${msg}\n the expected values are \n ${JSON.stringify(
+        `${msg}\n the actual values are \n ${JSON.stringify(
           expected
-        )} \n and te actual values were \n ${JSON.stringify(actual)}
+        )} \n and te expected values were \n ${JSON.stringify(actual)}
         \n
         `
       );
+      console.log("FUCKING SUCCESS");
     } catch (error) {
       console.error(error.message);
     }
@@ -373,8 +411,8 @@ function test() {
   testMapSeed(
     "Tests the case 4",
     [
-      { start: 100, length: 5 },
       { start: 10, length: 2 },
+      { start: 100, length: 5 },
       { start: 17, length: 3 },
     ],
     mapSeed({ start: 10, length: 10 }, [
@@ -385,8 +423,8 @@ function test() {
   testMapSeed(
     "Tests the case 5",
     [
-      { start: 100, length: 3 },
       { start: 10, length: 7 },
+      { start: 100, length: 3 },
     ],
     mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 17, rangeLength: 10, destinationRangeStart: 100 },
@@ -444,8 +482,8 @@ function test() {
   testMapSeed(
     "match just uder the seed and the range",
     [
-      { start: 100, length: 8 },
       { start: 10, length: 1 },
+      { start: 100, length: 8 },
       { start: 19, length: 1 },
     ],
     mapSeed({ start: 10, length: 10 }, [
@@ -467,8 +505,8 @@ function test() {
   testMapSeed(
     "Left seed starting on the left range",
     [
-      { start: 100, length: 1 },
       { start: 3, length: 7 },
+      { start: 100, length: 1 },
     ],
     mapSeed({ start: 3, length: 8 }, [
       { sourceRangeStart: 10, rangeLength: 10, destinationRangeStart: 100 },
@@ -511,10 +549,10 @@ function test() {
 
 test();
 
-let locations = computeAnswer();
+// let locations = computeAnswer();
 
-locations = locations.sort((a, b) => a.start - b.start);
+// locations = locations.sort((a, b) => a.start - b.start);
 
-console.log(locations);
+// console.log(locations);
 
-console.log(locations[0].start);
+// console.log(locations[0].start);
