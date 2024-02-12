@@ -1,8 +1,8 @@
 //@ts-check
 const { readFileSync } = require("fs");
 
-const INPUT = readFileSync("./2023/day5/testinput2.txt", "utf8");
-// const INPUT = readFileSync("./testinput2.txt", "utf8");
+// const INPUT = readFileSync("./2023/day5/testinput2.txt", "utf8");
+const INPUT = readFileSync("./input.txt", "utf8");
 
 /**
  * @typedef {{
@@ -149,7 +149,7 @@ function mapSeed(seed, maps) {
       seed.start + seed.length > lastNotChecked &&
       seed.start + seed.length < currentMap.sourceRangeStart
     ) {
-      console.log("1");
+      // console.log("1");
       mappedSeeds.push({
         start: lastNotChecked,
         length: seed.start + seed.length - lastNotChecked,
@@ -163,7 +163,7 @@ function mapSeed(seed, maps) {
       seed.start + seed.length - 1 >= lastNotChecked &&
       seed.start + seed.length - 1 <= currentMap.sourceRangeStart - 1
     ) {
-      console.log("2");
+      // console.log("2");
       mappedSeeds.push({
         start: seed.start,
         length: seed.length,
@@ -176,7 +176,7 @@ function mapSeed(seed, maps) {
       seed.start <= currentMap.sourceRangeStart - 1 &&
       seed.start + seed.length > currentMap.sourceRangeStart
     ) {
-      console.log("3");
+      // console.log("3");
       mappedSeeds.push({
         start: seed.start,
         length: currentMap.sourceRangeStart - seed.start,
@@ -188,7 +188,7 @@ function mapSeed(seed, maps) {
       seed.start < lastNotChecked &&
       currentMap.sourceRangeStart - 1 < seed.start + seed.length
     ) {
-      console.log("4");
+      // console.log("4");
       mappedSeeds.push({
         start: lastNotChecked,
         length: currentMap.sourceRangeStart - 1 - lastNotChecked,
@@ -204,7 +204,7 @@ function mapSeed(seed, maps) {
       seed.start + seed.length <=
         currentMap.sourceRangeStart + currentMap.rangeLength
     ) {
-      console.log("1m");
+      // console.log("1m");
       mappedSeeds.push({
         start: currentMap.destinationRangeStart,
         length: seed.start + seed.length - currentMap.sourceRangeStart,
@@ -219,7 +219,7 @@ function mapSeed(seed, maps) {
       seed.start + seed.length - 1 <=
         currentMap.sourceRangeStart + currentMap.rangeLength
     ) {
-      console.log("2m");
+      // console.log("2m");
       mappedSeeds.push({
         start:
           currentMap.destinationRangeStart +
@@ -236,7 +236,7 @@ function mapSeed(seed, maps) {
       seed.start + seed.length >
         currentMap.sourceRangeStart + currentMap.rangeLength
     ) {
-      console.log("3m");
+      // console.log("3m");
       mappedSeeds.push({
         start:
           currentMap.destinationRangeStart +
@@ -253,7 +253,7 @@ function mapSeed(seed, maps) {
       currentMap.sourceRangeStart + currentMap.rangeLength <
         seed.start + seed.length
     ) {
-      console.log("4m");
+      // console.log("4m");
       mappedSeeds.push({
         start: currentMap.destinationRangeStart,
         length: currentMap.rangeLength,
@@ -268,7 +268,7 @@ function mapSeed(seed, maps) {
     seed.start < lastNotChecked &&
     lastNotChecked <= seed.start + seed.length - 1
   ) {
-    console.log("1e");
+    // console.log("1e");
     mappedSeeds.push({
       start: lastNotChecked,
       length: seed.start + seed.length - lastNotChecked,
@@ -279,14 +279,14 @@ function mapSeed(seed, maps) {
     lastNotChecked <= seed.start &&
     lastNotChecked <= seed.start + seed.length - 1
   ) {
-    console.log("2e");
+    // console.log("2e");
     mappedSeeds.push({
       start: seed.start,
       length: seed.length,
     });
   }
 
-  return mappedSeeds;
+  return mappedSeeds.filter((seed) => seed.length >= 0);
 }
 
 function computeAnswer() {
@@ -557,12 +557,12 @@ function test() {
   );
 }
 
-test();
+// test();
 
-// let locations = computeAnswer();
+let locations = computeAnswer();
 
-// locations = locations.sort((a, b) => a.start - b.start);
+locations = locations.sort((a, b) => a.start - b.start);
 
-// console.log(locations);
+console.log(locations);
 
-// console.log(locations[0].start);
+console.log(locations[0].start);
