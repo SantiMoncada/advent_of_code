@@ -201,7 +201,7 @@ function mapSeed(seed, maps) {
     if (
       seed.start < currentMap.sourceRangeStart &&
       seed.start + seed.length > currentMap.sourceRangeStart &&
-      seed.start + seed.length <
+      seed.start + seed.length <=
         currentMap.sourceRangeStart + currentMap.rangeLength
     ) {
       console.log("1m");
@@ -231,7 +231,7 @@ function mapSeed(seed, maps) {
 
     //3m
     if (
-      seed.start > currentMap.sourceRangeStart &&
+      seed.start >= currentMap.sourceRangeStart &&
       seed.start < currentMap.sourceRangeStart + currentMap.rangeLength &&
       seed.start + seed.length >
         currentMap.sourceRangeStart + currentMap.rangeLength
@@ -527,8 +527,8 @@ function test() {
   testMapSeed(
     "Seed and map starting at the right of seed",
     [
-      { start: 100, length: 5 },
       { start: 10, length: 5 },
+      { start: 100, length: 5 },
     ],
     mapSeed({ start: 10, length: 10 }, [
       { sourceRangeStart: 15, rangeLength: 5, destinationRangeStart: 100 },
@@ -543,6 +543,16 @@ function test() {
       { destinationRangeStart: 0, sourceRangeStart: 11, rangeLength: 42 },
       { destinationRangeStart: 42, sourceRangeStart: 0, rangeLength: 7 },
       { destinationRangeStart: 57, sourceRangeStart: 7, rangeLength: 4 },
+    ])
+  );
+
+  testMapSeed(
+    "Bug going on soil to fertilizer in the testinput2",
+    [],
+    mapSeed({ start: 14, length: 1 }, [
+      { destinationRangeStart: 39, sourceRangeStart: 0, rangeLength: 15 },
+      { destinationRangeStart: 0, sourceRangeStart: 15, rangeLength: 37 },
+      { destinationRangeStart: 37, sourceRangeStart: 52, rangeLength: 2 },
     ])
   );
 }
