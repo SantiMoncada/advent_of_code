@@ -1,4 +1,4 @@
-//@ts-check
+//@ts-checkd
 const { readFileSync } = require("fs");
 
 const INPUT = readFileSync("./input.txt", "utf8");
@@ -108,4 +108,4 @@ console.log(computed);
 
 console.log(smallestCommons(computed));
 
-//then i used
+//then use a calculator to get the least common multiple , or dont idk
