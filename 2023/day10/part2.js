@@ -48,15 +48,15 @@ console.log(animalCoords);
  */
 const queue = [];
 /**
- * @type {boolean[][]}
+ * @type {string[][]}
  */
 const visited = Array(maze.length)
-  .fill(false)
-  .map(() => Array(maze[0].length).fill(false));
+  .fill(" ")
+  .map(() => Array(maze[0].length).fill(" "));
 
 queue.push(animalCoords);
 queue.push(null);
-visited[animalCoords.y][animalCoords.x] = true;
+visited[animalCoords.y][animalCoords.x] = "S";
 
 /**
  * @param {Coords} coords
@@ -64,13 +64,13 @@ visited[animalCoords.y][animalCoords.x] = true;
 function checkNorth(coords) {
   const { x, y } = coords;
 
-  if (visited[y - 1][x] === false) {
+  if (visited[y - 1][x] === " ") {
     if (
       maze[y - 1][x] === "|" ||
       maze[y - 1][x] === "7" ||
       maze[y - 1][x] === "F"
     ) {
-      visited[y - 1][x] = true;
+      visited[y - 1][x] = maze[y - 1][x];
       queue.push({ x, y: y - 1 });
     }
   }
@@ -81,13 +81,13 @@ function checkNorth(coords) {
  */
 function checkSouth(coords) {
   const { x, y } = coords;
-  if (visited[y + 1][x] === false) {
+  if (visited[y + 1][x] === " ") {
     if (
       maze[y + 1][x] === "|" ||
       maze[y + 1][x] === "L" ||
       maze[y + 1][x] === "J"
     ) {
-      visited[y + 1][x] = true;
+      visited[y + 1][x] = maze[y + 1][x];
       queue.push({ x, y: y + 1 });
     }
   }
@@ -99,13 +99,13 @@ function checkSouth(coords) {
 function checkEast(coords) {
   const { x, y } = coords;
 
-  if (visited[y][x + 1] === false) {
+  if (visited[y][x + 1] === " ") {
     if (
       maze[y][x + 1] === "-" ||
       maze[y][x + 1] === "J" ||
       maze[y][x + 1] === "7"
     ) {
-      visited[y][x + 1] = true;
+      visited[y][x + 1] = maze[y][x + 1];
       queue.push({ x: x + 1, y });
     }
   }
@@ -116,13 +116,13 @@ function checkEast(coords) {
  */
 function checkWest(coords) {
   const { x, y } = coords;
-  if (visited[y][x - 1] === false) {
+  if (visited[y][x - 1] === " ") {
     if (
       maze[y][x - 1] === "L" ||
       maze[y][x - 1] === "F" ||
       maze[y][x - 1] === "-"
     ) {
-      visited[y][x - 1] = true;
+      visited[y][x - 1] = maze[y][x - 1];
       queue.push({ x: x - 1, y: y });
     }
   }
@@ -186,33 +186,41 @@ while (queue.length !== 0) {
       break;
   }
 }
-
+printVisited(visited);
 console.log(counter);
 
 function printVisited(visited) {
+  const charToDisplay = {
+    "|": "│",
+    "-": "─",
+    L: "└",
+    J: "┘",
+    7: "┐",
+    F: "┌",
+    ".": ".",
+    S: "╬",
+    " ": " ",
+  };
   let line = "";
-  let separator = "|" + new Array(visited[0].length + 1).join("==") + "|";
+  let separatorTop = "┌" + new Array(visited[0].length + 1).join("─") + "┐";
+  let separatorBottom = "└" + new Array(visited[0].length + 1).join("─") + "┘";
 
   for (let i = 0; i < visited.length; i++) {
-    line += "|";
+    line += "│";
     for (let j = 0; j < visited[i].length; j++) {
-      if (visited[i][j]) {
-        line += "<>";
-      } else {
-        line += "  ";
-      }
+      line += charToDisplay[visited[i][j]];
     }
-    line += "|";
+    line += "│";
 
     if (i < visited.length - 1) {
       line += "\n";
     }
   }
-  console.clear();
+  // console.clear();
 
-  console.log(separator);
+  console.log(separatorTop);
   console.log(line);
-  console.log(separator);
+  console.log(separatorBottom);
 
   for (let k = 0; k < 100000000; k++) {}
 }
