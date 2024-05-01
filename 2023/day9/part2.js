@@ -44,15 +44,12 @@ function predictNextValue(report) {
     diference[i] = report[i + 1] - report[i];
   }
 
-  return predictNextValue(diference) + report[report.length - 1];
+  return -predictNextValue(diference) + report[0];
 }
-
-const out = predictNextValue(reports[0]);
 
 let count = 0;
 for (const report of reports) {
   const prediction = predictNextValue(report);
-  console.log(prediction);
   count += prediction;
 }
 console.log({ count });
