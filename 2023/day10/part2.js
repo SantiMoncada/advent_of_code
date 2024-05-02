@@ -149,7 +149,7 @@ while (queue.length !== 0) {
 
   const currentPipe = maze[y][x];
 
-  printVisited(visited);
+  // printVisited(visited);
 
   switch (currentPipe) {
     case "|":
@@ -186,8 +186,6 @@ while (queue.length !== 0) {
       break;
   }
 }
-printVisited(visited);
-console.log(counter);
 
 function printVisited(visited) {
   const charToDisplay = {
@@ -224,3 +222,128 @@ function printVisited(visited) {
 
   for (let k = 0; k < 100000000; k++) {}
 }
+
+const discreteMaze = [];
+
+for (let i = 0; i < visited.length; i++) {
+  let tLine = "";
+  let mLine = "";
+  let bLine = "";
+  for (let j = 0; j < visited[i].length; j++) {
+    const current = visited[i][j];
+
+    switch (current) {
+      case "|":
+        tLine += " # ";
+        mLine += " # ";
+        bLine += " # ";
+        break;
+      case "-":
+        tLine += "   ";
+        mLine += "###";
+        bLine += "   ";
+        break;
+      case "L":
+        tLine += " # ";
+        mLine += " ##";
+        bLine += "   ";
+        break;
+      case "J":
+        tLine += " # ";
+        mLine += "## ";
+        bLine += "   ";
+        break;
+      case "7":
+        tLine += "   ";
+        mLine += "## ";
+        bLine += " # ";
+        break;
+      case "F":
+        tLine += "   ";
+        mLine += " ##";
+        bLine += " # ";
+        break;
+      case " ":
+        tLine += "   ";
+        mLine += " . ";
+        bLine += "   ";
+        break;
+      case "S":
+        tLine += " # ";
+        mLine += "#S#";
+        bLine += " # ";
+        break;
+    }
+  }
+  discreteMaze[i * 3 + 0] = tLine;
+  discreteMaze[i * 3 + 1] = mLine;
+  discreteMaze[i * 3 + 2] = bLine;
+}
+
+for (const aa of discreteMaze) {
+  console.log(aa);
+}
+
+/**
+ * @type {Coords[]}
+ */
+const discreteQueue = [];
+/**
+ * @type {boolean[][]}
+ */
+const discreteVisited = Array(discreteMaze.length)
+  .fill(false)
+  .map(() => Array(discreteMaze[0].length).fill(false));
+
+discreteQueue.push({ x: 215, y: 215 });
+discreteVisited[215][215] = true;
+
+let output = 0;
+
+while (discreteQueue.length !== 0) {
+  const currentCoords = discreteQueue.shift();
+
+  if (!currentCoords) {
+    throw new Error("no coords");
+  }
+
+  const { x, y } = currentCoords;
+
+  const node = discreteMaze[y][x];
+
+  if (node === ".") {
+    output++;
+  }
+
+  if (!discreteVisited[y + 1][x] && discreteMaze[y + 1][x] !== "#") {
+    discreteVisited[y + 1][x] = true;
+    discreteQueue.push({ x, y: y + 1 });
+  }
+  if (!discreteVisited[y - 1][x] && discreteMaze[y - 1][x] !== "#") {
+    discreteVisited[y - 1][x] = true;
+    discreteQueue.push({ x, y: y - 1 });
+  }
+  if (!discreteVisited[y][x + 1] && discreteMaze[y][x + 1] !== "#") {
+    discreteVisited[y][x + 1] = true;
+    discreteQueue.push({ x: x + 1, y });
+  }
+  if (!discreteVisited[y][x - 1] && discreteMaze[y][x - 1] !== "#") {
+    discreteVisited[y][x - 1] = true;
+    discreteQueue.push({ x: x - 1, y });
+  }
+}
+
+for (let i = 0; i < discreteVisited.length; i++) {
+  let line = "";
+  for (let j = 0; j < discreteVisited[i].length; j++) {
+    if (discreteVisited[i][j]) {
+      line += "#";
+    } else {
+      line += " ";
+    }
+  }
+  line += "\n";
+  console.log(line);
+}
+
+console.log({ output });
