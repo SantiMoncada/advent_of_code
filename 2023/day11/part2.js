@@ -72,28 +72,41 @@ function getGalaxyCoords(image) {
 }
 
 /**
+ * @param {{i: number;j: number;}[]} galaxys
  * @param {string[][]} image
  */
-function expandSpace(image) {
+function expandSpace(galaxys, image) {
   const { emptyCols, emptyRows } = getEmptyLines(image);
+  const expandedGalaxys = [];
 
-  console.log({ emptyCols, emptyRows });
+  for (const galaxy of galaxys) {
+    const newGalaxy = { i: 0, j: 0 };
 
-  let rowOffset = 0;
-  const rowLenght = image[0].length;
-  for (const emptyRow of emptyRows) {
-    const newRow = Array(rowLenght).fill("*");
-    image.splice(emptyRow + rowOffset, 0, newRow);
-    rowOffset++;
-  }
-
-  let colOffset = 0;
-  for (const emptyCol of emptyCols) {
-    for (let i = 0; i < image.length; i++) {
-      image[i].splice(emptyCol + colOffset, 0, "*");
+    let rowsExpanded = 0;
+    for (const row of emptyRows) {
+      if (row < galaxy.i) {
+        rowsExpanded++;
+      } else {
+        break;
+      }
     }
-    colOffset++;
+
+    let colsExpanded = 0;
+    for (const col of emptyCols) {
+      if (col < galaxy.j) {
+        colsExpanded++;
+      } else {
+        break;
+      }
+    }
+
+    newGalaxy.i = galaxy.i + rowsExpanded * 1000000 - rowsExpanded;
+    newGalaxy.j = galaxy.j + colsExpanded * 1000000 - colsExpanded;
+
+    expandedGalaxys.push(newGalaxy);
   }
+
+  return expandedGalaxys;
 }
 
 /**
@@ -126,14 +139,14 @@ const INPUT = readFileSync("./input.txt", "utf8");
 
 const rawImage = parseInput(INPUT);
 
-expandSpace(rawImage);
-
 const galaxys = getGalaxyCoords(rawImage);
 
+const expandedGalaxys = expandSpace(galaxys, rawImage);
+
 let count = 0;
-for (let i = 0; i < galaxys.length - 1; i++) {
-  for (let j = i + 1; j < galaxys.length; j++) {
-    count += getDistance(galaxys[i], galaxys[j]);
+for (let i = 0; i < expandedGalaxys.length - 1; i++) {
+  for (let j = i + 1; j < expandedGalaxys.length; j++) {
+    count += getDistance(expandedGalaxys[i], expandedGalaxys[j]);
   }
 }
 
