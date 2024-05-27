@@ -170,19 +170,24 @@ function generateAllVariationsIterative(row, list) {
 
     let counter = 0;
     const newList = [];
+    let listPosition = 0;
 
     for (let i = 0; i < currentRow.length; i++) {
-      const spring = currentRow[i];
-      switch (spring) {
+      switch (currentRow[i]) {
         case "#":
           counter++;
           break;
         case ".":
           if (counter !== 0) {
+            if (list[listPosition] !== counter) {
+              continue stackLoop;
+            }
             newList.push(counter);
-            counter = 0;
+            listPosition++;
           }
+          counter = 0;
           break;
+
         case "?":
           let rowWorking = currentRow;
           let rowDamage = currentRow;
@@ -218,21 +223,19 @@ function generateAllVariationsIterative(row, list) {
   return variations;
 }
 
-const INPUT = readFileSync("./testInput.txt", "utf8");
+const INPUT = readFileSync("./input.txt", "utf8");
 const data = parseInput(INPUT);
 
-const testRow =
-  "????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.";
-const testList = [1, 6, 5, 1, 6, 5, 1, 6, 5, 1, 6, 5, 1, 6, 5];
+const testRow = data[5].row;
+
+const testList = data[5].list;
+
+console.time("generateAllVariationsIterative");
+const yeet = generateAllVariationsIterative(testRow, testList);
+console.timeEnd("generateAllVariationsIterative");
+console.log(yeet);
 
 console.time("generateAllVariations");
 const ye = generateAllVariations(testRow, testList);
 console.timeEnd("generateAllVariations");
 console.log(ye.length);
-
-console.time("generateAllVariationsIterative");
-const yeet = generateAllVariationsIterative(testRow, testList);
-
-console.timeEnd("generateAllVariationsIterative");
-
-console.log(yeet);
