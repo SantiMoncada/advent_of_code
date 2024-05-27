@@ -123,7 +123,6 @@ function couldBeValid(row, list) {
 }
 
 /**
- *
  * @param {string} row
  * @param {number[]} list
  * @returns {string[]}
@@ -157,46 +156,83 @@ function generateAllVariations(row, list) {
 }
 
 /**
- *
  * @param {string} row
+ * @param {number[]} list
+ * @returns {number}
  */
-function generateList(row) {
-  const list = [];
-  let counter = 0;
-  for (const char of row) {
-    if (char === "#") {
-      counter++;
+function generateAllVariationsIterative(row, list) {
+  let variations = 0;
+  const stack = [];
+  stack.push(row);
+
+  stackLoop: while (stack.length !== 0) {
+    const currentRow = stack.pop();
+
+    let counter = 0;
+    const newList = [];
+
+    for (let i = 0; i < currentRow.length; i++) {
+      const spring = currentRow[i];
+      switch (spring) {
+        case "#":
+          counter++;
+          break;
+        case ".":
+          if (counter !== 0) {
+            newList.push(counter);
+            counter = 0;
+          }
+          break;
+        case "?":
+          let rowWorking = currentRow;
+          let rowDamage = currentRow;
+
+          rowWorking = setCharAt(rowWorking, i, ".");
+          rowDamage = setCharAt(rowDamage, i, "#");
+          stack.push(rowWorking);
+          stack.push(rowDamage);
+          continue stackLoop;
+      }
     }
 
-    if (char === ".") {
-      if (counter !== 0) {
-        list.push(counter);
-        counter = 0;
+    if (counter !== 0) {
+      newList.push(counter);
+    }
+
+    if (list.length === newList.length) {
+      let listIsEqual = true;
+      for (let i = 0; i < newList.length; i++) {
+        if (list[i] !== newList[i]) {
+          listIsEqual = false;
+          break;
+        }
+      }
+
+      if (listIsEqual) {
+        // console.log(currentRow);
+        variations++;
       }
     }
   }
 
-  if (counter !== 0) {
-    list.push(counter);
-  }
-  return list;
+  return variations;
 }
 
 const INPUT = readFileSync("./testInput.txt", "utf8");
 const data = parseInput(INPUT);
 
-// const testRow = data[5].row;
-// const testList = data[5].list;
+const testRow =
+  "????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.";
+const testList = [1, 6, 5, 1, 6, 5, 1, 6, 5, 1, 6, 5, 1, 6, 5];
 
-// console.time("generateAllVariations");
-// const ye = generateAllVariations(testRow, testList);
-// console.timeEnd("generateAllVariations");
+console.time("generateAllVariations");
+const ye = generateAllVariations(testRow, testList);
+console.timeEnd("generateAllVariations");
+console.log(ye.length);
 
-const a = data.map((spring) => {
-  const variations = generateAllVariations(spring.row, spring.list).length;
-  console.log(variations);
-  return variations;
-});
-console.log(a);
+console.time("generateAllVariationsIterative");
+const yeet = generateAllVariationsIterative(testRow, testList);
 
-console.log(a.reduce((a, b) => a + b));
+console.timeEnd("generateAllVariationsIterative");
+
+console.log(yeet);
