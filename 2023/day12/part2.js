@@ -2,6 +2,43 @@
 const { readFileSync } = require("fs");
 
 /**
+ * @param {string} str
+ * @param {number} index
+ * @param {string} chr
+ * @returns {string}
+ */
+function setCharAt(str, index, chr) {
+  if (index > str.length - 1) return str;
+  return str.substring(0, index) + chr + str.substring(index + 1);
+}
+
+/**
+
+ * @param {Spring} spring
+ * @returns {Spring}
+ */
+function expandSpring(spring) {
+  const newList = [];
+  for (let i = 0; i < 5; i++) {
+    newList.push(...spring.list);
+  }
+
+  let newRow = "";
+
+  for (let i = 0; i < 5; i++) {
+    newRow += spring.row;
+
+    if (i === 4) {
+      break;
+    }
+
+    newRow += "?";
+  }
+
+  return { list: newList, row: newRow };
+}
+
+/**
  * @typedef {{row:string, list:number[]}} Spring
  */
 /**
@@ -15,13 +52,15 @@ function parseInput(input) {
   for (const line of lines) {
     const [row, list] = line.split(" ");
 
-    ouput.push({
-      row,
-      list: list
-        .trim()
-        .split(",")
-        .map((e) => parseInt(e)),
-    });
+    ouput.push(
+      expandSpring({
+        row,
+        list: list
+          .trim()
+          .split(",")
+          .map((e) => parseInt(e)),
+      })
+    );
   }
 
   return ouput;
@@ -30,40 +69,91 @@ function parseInput(input) {
 /**
  *
  * @param {string} row
- * @returns {string[]}
+ * @param {number[]} list
+ * @returns {boolean}
  */
-function generateAllVariations(row) {
-  const output = [];
+function couldBeValid(row, list) {
+  let counter = 0;
+  let listPosition = 0;
+  const currentList = [];
 
-  let ambigiousSpaces = 0;
   for (const char of row) {
-    if (char === "?") {
-      ambigiousSpaces++;
+    switch (char) {
+      case "#":
+        counter += 1;
+        break;
+      case ".":
+        if (counter !== 0) {
+          if (list[listPosition] !== counter) {
+            return false;
+          }
+          currentList.push(counter);
+          listPosition++;
+        }
+        counter = 0;
+        break;
+      case "?":
+        return true;
     }
   }
+  if (counter !== 0) {
+    if (list[listPosition] !== counter) {
+      return false;
+    }
+    currentList.push(counter);
+  }
 
-  for (let i = 0; i < 2 ** ambigiousSpaces; i++) {
-    const binaryMap = i.toString(2).padStart(ambigiousSpaces, "0");
+  if (list.length < listPosition) {
+    return false;
+  }
 
-    let newRow = "";
-    let j = 0;
-    for (const char of row) {
-      if (char === "?") {
-        if (binaryMap[j] === "0") {
-          newRow += ".";
-        }
-        if (binaryMap[j] === "1") {
-          newRow += "#";
-        }
-        j++;
-      } else {
-        newRow += char;
+  if (!row.includes("?")) {
+    if (list.length !== currentList.length) {
+      return false;
+    }
+
+    for (let i = 0; i < list.length; i++) {
+      if (list[i] !== currentList[i]) {
+        return false;
       }
     }
-    output.push(newRow);
   }
 
-  return output;
+  return true;
+}
+
+/**
+ *
+ * @param {string} row
+ * @param {number[]} list
+ * @returns {string[]}
+ */
+function generateAllVariations(row, list) {
+  if (!couldBeValid(row, list)) {
+    return [];
+  }
+
+  if (!row.includes("?")) {
+    return [row];
+  }
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+
+    if (char === "?") {
+      let rowWorking = row;
+      let rowDamage = row;
+
+      rowWorking = setCharAt(rowWorking, i, ".");
+      rowDamage = setCharAt(rowDamage, i, "#");
+
+      return [
+        ...generateAllVariations(rowWorking, list),
+        ...generateAllVariations(rowDamage, list),
+      ];
+    }
+  }
+
+  return [];
 }
 
 /**
@@ -92,51 +182,21 @@ function generateList(row) {
   return list;
 }
 
-/**
- *
- * @param {Spring} spring
- * @returns {boolean}
- */
-function validateSpring(spring) {
-  const { row, list } = spring;
-  if (row.includes("#")) {
-    throw new Error("Cant handle ambigious spring");
-  }
-
-  return true;
-}
-
-/**
- * @param {number[]} arr1
- * @param {number[]} arr2
- *
- * @returns {boolean}
- */
-function compareArrays(arr1, arr2) {
-  if (arr1.length !== arr2.length) {
-    return false;
-  }
-  for (let i = 0; i < arr1.length; i++) {
-    if (arr1[i] !== arr2[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-const INPUT = readFileSync("./input.txt", "utf8");
+const INPUT = readFileSync("./testInput.txt", "utf8");
 const data = parseInput(INPUT);
 
-const ye = data.map((spring) => {
-  return generateAllVariations(spring.row).filter((e) =>
-    compareArrays(generateList(e), spring.list)
-  ).length;
+// const testRow = data[5].row;
+// const testList = data[5].list;
+
+// console.time("generateAllVariations");
+// const ye = generateAllVariations(testRow, testList);
+// console.timeEnd("generateAllVariations");
+
+const a = data.map((spring) => {
+  const variations = generateAllVariations(spring.row, spring.list).length;
+  console.log(variations);
+  return variations;
 });
+console.log(a);
 
-let result = 0;
-
-for (const n of ye) {
-  result += n;
-}
-console.log(result);
+console.log(a.reduce((a, b) => a + b));
