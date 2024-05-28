@@ -279,13 +279,100 @@ function generateAllVariationsDynamic(row, list) {
   throw new Error("should not be here");
 }
 
+/**
+ * @param {string} row
+ * @param {number[]} list
+ * @param  {any} memo
+ * @returns {number}
+ */
+function generateAllVariationsDynamicMemo(row, list, memo = new Map()) {
+  const memoKey = `${row}${list}`;
+  if (memo.has(memoKey)) {
+    return memo.get(`${row}${list}`);
+  }
+
+  if (row === "" && list.length === 0) {
+    memo.set(memoKey, 1);
+    return 1;
+  }
+
+  if (row === "" && list.length > 0) {
+    memo.set(memoKey, 0);
+    return 0;
+  }
+
+  if (list.length === 0 && row.length !== 0) {
+    if (row.includes("#")) {
+      memo.set(memoKey, 0);
+      return 0;
+    } else {
+      memo.set(memoKey, 1);
+      return 1;
+    }
+  }
+
+  if (row[0] === ".") {
+    const out = generateAllVariationsDynamicMemo(row.slice(1), list, memo);
+    memo.set(memoKey, out);
+    return out;
+  }
+
+  const window = list[0];
+
+  if (row[0] === "#") {
+    if (row.length >= window) {
+      if (!row.slice(0, window).includes(".") && row[window] !== "#") {
+        const out = generateAllVariationsDynamicMemo(
+          row.slice(window + 1),
+          list.slice(1),
+          memo
+        );
+        memo.set(memoKey, out);
+        return out;
+      } else {
+        memo.set(memoKey, 0);
+        return 0;
+      }
+    } else {
+      memo.set(memoKey, 0);
+      return 0;
+    }
+  }
+
+  if (row[0] === "?") {
+    let value = 0;
+
+    if (row.length >= window) {
+      if (!row.slice(0, window).includes(".") && row[window] !== "#") {
+        value += generateAllVariationsDynamicMemo(
+          row.slice(window + 1),
+          list.slice(1),
+          memo
+        );
+      }
+    }
+
+    value += generateAllVariationsDynamicMemo(row.slice(1), list, memo);
+    memo.set(memoKey, value);
+    return value;
+  }
+  console.log({ row, list });
+
+  throw new Error("should not be here");
+}
 const INPUT = readFileSync("./input.txt", "utf8");
 const data = parseInput(INPUT);
 
-const i = 2;
-const testRow = data[i].row;
+console.clear();
+const i = 0;
 
-const testList = data[i].list;
+const testRow = data[0].row;
+
+const testList = data[0].list;
+
+console.time("generateAllVariationsDynamicMemo");
+console.log(generateAllVariationsDynamicMemo(testRow, testList));
+console.timeEnd("generateAllVariationsDynamicMemo");
 
 console.time("generateAllVariationsDynamic");
 console.log(generateAllVariationsDynamic(testRow, testList));
@@ -299,12 +386,8 @@ console.time("generateAllVariations");
 console.log(generateAllVariations(testRow, testList).length);
 console.timeEnd("generateAllVariations");
 
-// let count = 0;
-// data.forEach((row) => {
-//   console.time("generateAllVariations");
-//   const value = generateAllVariationsIterative(row.row, row.list);
-//   console.timeEnd("generateAllVariations");
-//   count += value;
-//   console.log(value);
-// });
-// console.log(count);
+let count = 0;
+data.forEach((row) => {
+  count += generateAllVariationsDynamicMemo(row.row, row.list);
+});
+console.log(count);
