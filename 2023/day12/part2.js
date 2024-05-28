@@ -223,19 +223,88 @@ function generateAllVariationsIterative(row, list) {
   return variations;
 }
 
+/**
+ * @param {string} row
+ * @param {number[]} list
+ * @returns {number}
+ */
+function generateAllVariationsDynamic(row, list) {
+  if (row === "" && list.length === 0) {
+    return 1;
+  }
+
+  if (row === "" && list.length > 0) {
+    return 0;
+  }
+
+  if (list.length === 0 && row.length !== 0) {
+    if (row.includes("#")) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+
+  if (row[0] === ".") {
+    return generateAllVariationsDynamic(row.slice(1), list);
+  }
+
+  const window = list[0];
+
+  if (row[0] === "#") {
+    if (!row.slice(0, window).includes(".") && row[window] !== "#") {
+      return generateAllVariationsDynamic(row.slice(window + 1), list.slice(1));
+    } else {
+      return 0;
+    }
+  }
+
+  if (row[0] === "?") {
+    let value = 0;
+
+    if (row.length >= window) {
+      if (!row.slice(0, window).includes(".") && row[window] !== "#") {
+        value += generateAllVariationsDynamic(
+          row.slice(window + 1),
+          list.slice(1)
+        );
+      }
+    }
+
+    value += generateAllVariationsDynamic(row.slice(1), list);
+    return value;
+  }
+  console.log({ row, list });
+
+  throw new Error("should not be here");
+}
+
 const INPUT = readFileSync("./input.txt", "utf8");
 const data = parseInput(INPUT);
 
-const testRow = data[5].row;
+const i = 2;
+const testRow = data[i].row;
 
-const testList = data[5].list;
+const testList = data[i].list;
+
+console.time("generateAllVariationsDynamic");
+console.log(generateAllVariationsDynamic(testRow, testList));
+console.timeEnd("generateAllVariationsDynamic");
 
 console.time("generateAllVariationsIterative");
-const yeet = generateAllVariationsIterative(testRow, testList);
+console.log(generateAllVariationsIterative(testRow, testList));
 console.timeEnd("generateAllVariationsIterative");
-console.log(yeet);
 
 console.time("generateAllVariations");
-const ye = generateAllVariations(testRow, testList);
+console.log(generateAllVariations(testRow, testList).length);
 console.timeEnd("generateAllVariations");
-console.log(ye.length);
+
+// let count = 0;
+// data.forEach((row) => {
+//   console.time("generateAllVariations");
+//   const value = generateAllVariationsIterative(row.row, row.list);
+//   console.timeEnd("generateAllVariations");
+//   count += value;
+//   console.log(value);
+// });
+// console.log(count);
