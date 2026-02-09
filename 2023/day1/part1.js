@@ -28,7 +28,7 @@ function getNumbersFromString(s) {
     }
   }
 
-  if(end === null || start === null){
+  if (end === null || start === null) {
     return null
   }
 
@@ -42,7 +42,7 @@ let acc = 0;
 
 for (const number of listOfNums) {
   console.log(number)
-  if(number === null){
+  if (number === null) {
     console.error("not num found")
     process.exit(1);
   }
@@ -50,4 +50,4 @@ for (const number of listOfNums) {
   acc += number;
 }
 
-console.log({acc})
+console.log({ acc })
