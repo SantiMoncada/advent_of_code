@@ -20,24 +20,27 @@ let pointsPassing0 = 0
  */
 function calulate100s(start, end) {
 
+  const mag = Math.abs(end - start)
+  let rem = 0
 
-  let acc = 0
   if (start < end) {
-
-    let rem = start % 100
+    rem = start % 100
     if (rem < 0) {
       rem = 100 + rem
     }
-    const mag = Math.abs(end - start)
-    const turns = Math.floor((rem + mag) / 100)
-    acc += turns
   } else {
-
-    const rem = Math.abs(start % 100)
-    const mag = Math.abs(end - start)
-    const turns = Math.floor((rem + mag) / 100)
-    acc += turns
+    rem = start % 100
+    if (rem < 0) {
+      rem *= -1
+    } else {
+      rem = 100 - rem
+    }
   }
+
+  if (rem === 100) {
+    rem = 0
+  }
+  const acc = Math.floor((rem + mag) / 100)
   return acc
 }
 
@@ -70,15 +73,6 @@ for (const line of blocks) {
 console.log(`pointingAt0: ${pointingAt0}`)
 console.log(`pointsPassing0:${Math.abs(pointsPassing0)}`)
 
-6351// too high
-6152 //toolow?
-
-6223//not it
-6153//not
-6154 //not
-
-6289// advent code solver
-
 const tests = [
   [0, 100, 1],
   [20, 90, 0],
@@ -95,15 +89,28 @@ const tests = [
   [0, -500, 5],
   [-100, 100, 2],
   [-101, 100, 3],
-  [-101, 101, 3]
+  [-101, 101, 3],
+  [100, 0, 1],
+  [90, 20, 0],
+  [-90, -30, 0],
+  [300, 35, 2],
+  [370, 200, 2],
+  [370, 130, 2],
+  [-300, -535, 2],
+  [-370, -400, 1],
+  [-37, -490, 4],
+  [1, -1, 1],
+  [145, -250, 4],
+  [500, 0, 5],
+  [-500, 0, 5],
+  [100, -100, 2],
+  [100, -101, 2],
+  [101, -101, 3]
 ]
 
 for (const test of tests) {
   const [start, end, result] = test
 
   const calc = calulate100s(start, end)
-
-  console.log(`${start} -> ${end} = ${calc}\t${calc === result ? "match" : "not a match " + result}`)
-  const calcReverse = calulate100s(start, end)
-  console.log(`${end} -> ${start} = ${calcReverse}\t${calcReverse === result ? "match" : "not a match " + result}`)
+  console.log(`${start}\t->\t${end}\t=\t${calc}\t${calc === result ? "match" : "not a match " + result}`)
 }
